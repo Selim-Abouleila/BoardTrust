@@ -175,6 +175,27 @@ app.get('/games', (req, res) => {
   });
 });
 
+app.post('/isRented', (req, res) => {
+  const { id_utilisateur, id_jeu } = req.body;
+
+  if (!id_utilisateur || !id_jeu) {
+    return res.status(400).json({ error: 'Missing id_utilisateur or id_jeu' });
+  }
+
+  const sql = 'CALL EstLoueParUtilisateur(?, ?, @isRented); SELECT @isRented AS rented;';
+  db.query(sql, [id_utilisateur, id_jeu], (err, results) => {
+    if (err) {
+      console.error('SQL Error:', err);
+      return res.status(500).json({ error: 'Error checking rental status' });
+    }
+
+    // Extract the value of @isRented from the second result set
+    const rented = results[1][0].rented === 1; // MySQL returns 1 for true
+    res.json({ rented });
+  });
+});
+
+
 // Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
