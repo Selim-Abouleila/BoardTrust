@@ -134,17 +134,27 @@ app.get('/history', (req, res) => {
 // Return Game
 app.post('/return', (req, res) => {
   console.log('Return request body:', req.body);
-  const { id_jeu } = req.body;
+  const { id_jeu, id_utilisateur } = req.body;
 
-  if (!id_jeu) {
-    return res.status(400).json({ error: 'Missing id_jeu' });
+  if (!id_jeu || !id_utilisateur) {
+    return res.status(400).json({ error: 'Missing id_jeu or id_utilisateur' });
   }
 
-  const sql = 'CALL RetournerJeu(?)';
-  db.query(sql, [id_jeu], (err, result) => {
+  const sql = 'CALL RetournerJeu(?, ?)';
+  
+  db.query(sql, [id_utilisateur, id_jeu], (err, result) => {
     if (err) {
       console.error('Return SQL Error:', err);
       return res.status(500).json({ error: 'Error while returning game' });
+    }
+
+    // Depending on your MySQL driver, the affected rows may be in a different position.
+    // In many MySQL Node drivers when calling a procedure, the second element contains the OkPacket info.
+    const affectedRows = (result && result[1] && result[1].affectedRows) || 0;
+
+    if (affectedRows === 0) {
+      // No rows updated means the game wasn't currently rented by this user.
+      return res.status(400).json({ error: 'Game is not currently being rented.' });
     }
 
     res.json({ message: 'Game returned successfully' });

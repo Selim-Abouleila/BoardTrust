@@ -13,6 +13,10 @@
 </div>
 
 <script>
+    // For demonstration, we set the logged-in user id to 1.
+    // In production, you might retrieve it from localStorage or session
+    const loggedUserId = 1;
+
     async function loadGames() {
         try {
             const res = await fetch('https://boardtrust-production.up.railway.app/games');
@@ -20,8 +24,27 @@
             const container = document.getElementById('gamesList');
 
             games.forEach(game => {
+                // Create a card container
                 const card = document.createElement('div');
                 card.className = 'col-md-4';
+
+                // Determine which button to display based on rental status:
+                // 1. If the game is not rented => show the "Louer" button.
+                // 2. If the game is rented:
+                //     a. If it is rented by the logged in user => show "Retourner" button.
+                //     b. Otherwise, disable action (or show "Indisponible").
+                let actionButton = '';
+                if (game.isRented) {
+                    if (game.rentingUserId === loggedUserId) {
+                        actionButton = `<button class="btn btn-danger" onclick="returnGame(${game.id_jeu}, ${loggedUserId})">Retourner</button>`;
+                    } else {
+                        actionButton = `<button class="btn btn-secondary" disabled>Indisponible</button>`;
+                    }
+                } else {
+                    actionButton = `<button class="btn btn-primary" onclick="rentGame(${game.id_jeu})">Louer</button>`;
+                }
+
+                // Build the inner HTML of the card
                 card.innerHTML = `
             <div class="card shadow-sm">
               <div class="card-body">
@@ -31,12 +54,12 @@
                 <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
                 <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
                 <div class="d-grid gap-2">
-                  <button class="btn btn-primary" onclick="rentGame(${game.id_jeu})">Louer</button>
-                  <button class="btn btn-danger" onclick="returnGame(${game.id_jeu})">Retourner</button>
+                  ${actionButton}
                 </div>
               </div>
             </div>
           `;
+
                 container.appendChild(card);
             });
         } catch (error) {
@@ -45,14 +68,14 @@
     }
 
     async function rentGame(id_jeu) {
-        const id_utilisateur = 1; // Replace with actual logged user ID
+        // Use the logged in user's ID
         const date_retour = prompt("Date de retour prévue (AAAA-MM-JJ):");
 
         try {
             const res = await fetch('https://boardtrust-production.up.railway.app/rent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_utilisateur, id_jeu, date_retour_prevue: date_retour })
+                body: JSON.stringify({ id_utilisateur: loggedUserId, id_jeu, date_retour_prevue: date_retour })
             });
             const data = await res.json();
             alert(data.message || data.error);
@@ -61,12 +84,12 @@
         }
     }
 
-    async function returnGame(id_jeu) {
+    async function returnGame(id_jeu, id_utilisateur) {
         try {
             const res = await fetch('https://boardtrust-production.up.railway.app/return', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_jeu })
+                body: JSON.stringify({ id_utilisateur, id_jeu })
             });
             const data = await res.json();
             alert(data.message || data.error);
