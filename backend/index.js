@@ -103,7 +103,7 @@ app.post('/rent', (req, res) => {
   const { id_jeu, date_retour_prevue } = req.body;
 
   // Check if the user is logged in first.
-  if (!req.session || !req.session.userId) {
+  if (req.session.userId == 1) {
     return res.status(401).json({ error: 'User not logged in' });
   }
   
@@ -143,7 +143,7 @@ app.post('/return', (req, res) => {
   console.log('Return request body:', req.body);
 
   // Check if the user is logged in.
-  if (!req.session || !req.session.userId) {
+  if (req.session.userId==1) {
     return res.status(401).json({ error: 'User not logged in' });
   }
 
