@@ -1,77 +1,70 @@
-USE BoardTrust;
+DELIMITER //
 
--- 1) Procédure "sp_louer_jeu"
----------------------------------------------------
-DROP PROCEDURE IF EXISTS sp_louer_jeu;
-
-DELIMITER $$
-CREATE PROCEDURE sp_louer_jeu (
-    IN p_id_exemplaire INT,
-    IN p_id_utilisateur INT
+CREATE PROCEDURE AddUser (
+    IN p_name VARCHAR(100),
+    IN p_email VARCHAR(100),
+    IN p_mot_de_passe VARCHAR(100)
 )
 BEGIN
-    INSERT INTO Location (id_exemplaire, id_utilisateur, date_debut, date_fin)
-    VALUES (p_id_exemplaire, p_id_utilisateur, CURRENT_DATE(), NULL);
-    -- Les triggers (s'ils existent) mettront l’exemplaire à "loué" 
-    -- et incrémenteront le compteur de l’utilisateur (si vous l'avez implémenté).
-END $$
+    INSERT INTO Utilisateur (pseudo, email, mot_de_passe, date_inscription)
+    VALUES (p_name, p_email, p_mot_de_passe, CURDATE());
+END //
+
 DELIMITER ;
 
--- Afficher le CREATE de la procédure
-SHOW CREATE PROCEDURE sp_louer_jeu;
+CALL AddUser('Selim Abouleila', 'selimabouleila@gmail.com','123');
 
+DELIMITER //
 
--- 2) Procédure "sp_retourner_jeu"
----------------------------------------------------
-DROP PROCEDURE IF EXISTS sp_retourner_jeu;
+CREATE PROCEDURE LouerJeu (
+    IN p_id_utilisateur INT,
+    IN p_id_jeu INT,
+    IN p_date_retour_prevue DATE
+)
+BEGIN
+    INSERT INTO Location (
+        id_utilisateur,
+        id_jeu,
+        date_location,
+        date_retour_prevue,
+        date_retour_effective
+    ) VALUES (
+        p_id_utilisateur,
+        p_id_jeu,
+        CURDATE(),
+        p_date_retour_prevue,
+        NULL
+    );
+END //
 
-DELIMITER $$
-CREATE PROCEDURE sp_retourner_jeu (
-    IN p_id_location INT
+DELIMITER ;
+
+DELIMITER //
+
+DELIMITER //
+CREATE PROCEDURE RetournerJeu (
+    IN p_id_jeu INT
 )
 BEGIN
     UPDATE Location
-    SET date_fin = CURRENT_DATE()
-    WHERE id_location = p_id_location;
-    -- Un trigger AFTER UPDATE (s’il existe) peut recalculer la duree_location
-    -- et repasser le statut de l'exemplaire à "disponible".
-END $$
+    SET date_retour_effective = CURDATE()
+    WHERE id_jeu = p_id_jeu
+      AND date_retour_effective IS NULL
+    ORDER BY date_location ASC
+    LIMIT 1;
+END //
+
 DELIMITER ;
 
--- Afficher le CREATE de la procédure
-SHOW CREATE PROCEDURE sp_retourner_jeu;
 
-
--- 3) Fonction "fn_get_average_rating"
----------------------------------------------------
-DROP FUNCTION IF EXISTS fn_get_average_rating;
-
-DELIMITER $$
-CREATE FUNCTION fn_get_average_rating (
-    p_id_jeu INT
-)
-RETURNS FLOAT
-DETERMINISTIC
-BEGIN
-    DECLARE avg_note FLOAT;
-    
-    SELECT AVG(note) INTO avg_note
-    FROM Commentaire
-    WHERE id_jeu = p_id_jeu;
-    
-    RETURN IFNULL(avg_note, 0);  -- Renvoie 0 si aucune note.
-END $$
 DELIMITER ;
 
--- Afficher le CREATE de la fonction
-SHOW CREATE FUNCTION fn_get_average_rating;
 
+SELECT * FROM Jeu;
+CALL LouerJeu(1, 13, '2025-05-01');
+CALL LouerJeu(1, 13, '2025-05-03');
 
--- 4) Exemple d'utilisation
----------------------------------------------------
--- Appeler les procédures
-CALL sp_louer_jeu(1, 2);       -- Loue l'exemplaire #1 pour l'utilisateur #2
-CALL sp_retourner_jeu(5);      -- Rend la location #5 (si elle existe)
+CALL RetournerJeu(13);
 
--- Appeler la fonction
-SELECT FN_GET_AVERAGE_RATING(1) AS moyenne_catan;
+SELECT * FROM Location;
+SELECT * FROM HistoriqueLocation;	
