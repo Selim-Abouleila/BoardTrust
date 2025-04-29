@@ -23,6 +23,13 @@
 </div>
 
 <script>
+    // Check if already logged in
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+        console.log('User already logged in, redirecting to dashboard...');
+        window.location.href = '/dashboard.html'; // Redirect to dashboard if logged in
+    }
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -52,10 +59,10 @@
             console.log('Response data:', data);
 
             if (data.message === 'Login successful' && data.user) {
-                localStorage.setItem('userId', data.user.id);
-                localStorage.setItem('username', data.user.username);
-                alert('Login successful! Welcome, ' + data.user.username);
-                window.location.href = '/';
+                localStorage.setItem('userId', data.user.id_utilisateur);
+                localStorage.setItem('username', data.user.pseudo);
+                alert('Login successful! Welcome, ' + data.user.pseudo);
+                window.location.href = '/dashboard.html'; // Redirect to dashboard
             } else {
                 throw new Error('Unexpected response format');
             }
