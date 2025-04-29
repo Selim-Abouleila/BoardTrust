@@ -182,18 +182,29 @@ app.post('/isRented', (req, res) => {
     return res.status(400).json({ error: 'Missing id_utilisateur or id_jeu' });
   }
 
-  const sql = 'CALL EstLoueParUtilisateur(?, ?, @isRented); SELECT @isRented AS rented;';
-  db.query(sql, [id_utilisateur, id_jeu], (err, results) => {
+  // First call the stored procedure
+  const callProcedureSQL = 'CALL EstLoueParUtilisateur(?, ?, @isRented)';
+  db.query(callProcedureSQL, [id_utilisateur, id_jeu], (err, results) => {
     if (err) {
-      console.error('SQL Error:', err);
-      return res.status(500).json({ error: 'Error checking rental status' });
+      console.error('SQL Error in procedure call:', err);
+      return res.status(500).json({ error: 'Error calling procedure' });
     }
 
-    // Extract the value of @isRented from the second result set
-    const rented = results[1][0].rented === 1; // MySQL returns 1 for true
-    res.json({ rented });
+    // Now get the value of the output variable
+    const getOutputSQL = 'SELECT @isRented AS rented';
+    db.query(getOutputSQL, (error, result2) => {
+      if (error) {
+        console.error('SQL Error in output retrieval:', error);
+        return res.status(500).json({ error: 'Error retrieving rental status' });
+      }
+
+      // MySQL returns 1 for true.
+      const rented = (result2[0].rented === 1);
+      res.json({ rented });
+    });
   });
 });
+
 
 
 // Start server
