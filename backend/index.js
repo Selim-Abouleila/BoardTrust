@@ -1,6 +1,8 @@
 const express = require('express');
 const db = require('./database'); // 👈 Import the DB connection
 const path = require('path'); // 👈 Add the 'path' import
+const bcrypt = require('bcrypt');
+
 require('dotenv').config();
 
 const app = express();
@@ -91,24 +93,37 @@ app.listen(port, () => {
 app.post('/register', async (req, res) => {
   const { pseudo, email, mot_de_passe } = req.body;
 
+  if (!pseudo || !email || !mot_de_passe) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
   // Hash the password before storing
-  const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+  try {
+    const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
+  
+    // Call stored procedure to insert user data
+    const sql = 'CALL AddUser(?, ?, ?)';
+    db.query(sql, [pseudo, email, hashedPassword], (err, result) => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Error registering user' });
+      }
 
-  // Call stored procedure to insert user data
-  const sql = 'CALL AddUser(?, ?, ?)';
-  db.query(sql, [pseudo, email, hashedPassword], (err, result) => {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ error: 'Error registering user' });
-    }
-
-    res.json({ message: 'User registered successfully' });
-  });
+      res.json({ message: 'User registered successfully' });
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: 'Error hashing password' });
+  }
 });
 
 // User Login
 app.post('/login', (req, res) => {
   const { email, mot_de_passe } = req.body;
+
+  if (!email || !mot_de_passe) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
   const sql = 'SELECT * FROM Utilisateur WHERE email = ?';
   db.query(sql, [email], (err, results) => {
@@ -141,4 +156,9 @@ app.post('/login', (req, res) => {
       res.json({ message: 'Login successful', user: { id_utilisateur: user.id_utilisateur, pseudo: user.pseudo } });
     });
   });
+});
+
+// Start server
+app.listen(3000, () => {
+  console.log('Server running on port 3000');
 });
