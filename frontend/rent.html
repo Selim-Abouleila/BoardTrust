@@ -14,46 +14,68 @@
 
 <script>
     async function loadGames() {
-        const res = await fetch('https://boardtrust-production.up.railway.app/games');
-        const games = await res.json();
+        try {
+            const res = await fetch('https://boardtrust-production.up.railway.app/games');
+            const games = await res.json();
+            const container = document.getElementById('gamesList');
 
-        const container = document.getElementById('gamesList');
-
-        games.forEach(game => {
-            const card = document.createElement('div');
-            card.className = 'col-md-4';
-
-            card.innerHTML = `
-                <div class="card shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">${game.nom}</h5>
-                        <p><strong>Année de publication:</strong> ${game.annee_publication || 'N/A'}</p>
-                        <p><strong>Moyenne:</strong> ${game.average || 'N/A'}</p>
-                        <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
-                        <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
-                        <button class="btn btn-primary w-100" onclick="rentGame(${game.id_jeu})">Louer</button>
-                    </div>
+            games.forEach(game => {
+                const card = document.createElement('div');
+                card.className = 'col-md-4';
+                card.innerHTML = `
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title">${game.nom}</h5>
+                <p><strong>Année de publication:</strong> ${game.annee_publication || 'N/A'}</p>
+                <p><strong>Moyenne:</strong> ${game.average || 'N/A'}</p>
+                <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
+                <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
+                <div class="d-grid gap-2">
+                  <button class="btn btn-primary" onclick="rentGame(${game.id_jeu})">Louer</button>
+                  <button class="btn btn-danger" onclick="returnGame(${game.id_jeu})">Retourner</button>
                 </div>
-            `;
-
-            container.appendChild(card);
-        });
+              </div>
+            </div>
+          `;
+                container.appendChild(card);
+            });
+        } catch (error) {
+            console.error('Erreur de chargement des jeux:', error);
+        }
     }
 
     async function rentGame(id_jeu) {
         const id_utilisateur = 1; // Replace with actual logged user ID
         const date_retour = prompt("Date de retour prévue (AAAA-MM-JJ):");
 
-        const res = await fetch('https://boardtrust-production.up.railway.app/rent', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id_utilisateur, id_jeu, date_retour_prevue: date_retour })
-        });
-
-        const data = await res.json();
-        alert(data.message || data.error);
+        try {
+            const res = await fetch('https://boardtrust-production.up.railway.app/rent', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_utilisateur, id_jeu, date_retour_prevue: date_retour })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            console.error('Erreur lors de la location du jeu:', error);
+        }
     }
 
+    async function returnGame(id_jeu) {
+        try {
+            const res = await fetch('https://boardtrust-production.up.railway.app/return', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_jeu })
+            });
+            const data = await res.json();
+            alert(data.message || data.error);
+        } catch (error) {
+            console.error('Erreur lors du retour du jeu:', error);
+        }
+    }
+
+    // Load games when the page loads
     loadGames();
 </script>
 </body>
