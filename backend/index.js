@@ -105,32 +105,35 @@ app.post('/register', (req, res) => {
   });
 });
 
-// User Login (without bcrypt)
+// Login route
 app.post('/login', (req, res) => {
-  const { email, mot_de_passe } = req.body;
+  console.log('Request body:', req.body);
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
 
   const sql = 'SELECT * FROM Utilisateur WHERE email = ?';
   db.query(sql, [email], (err, results) => {
     if (err) {
-      console.error(err);
+      console.error('SQL Error:', err);
       return res.status(500).json({ error: 'Database error' });
     }
 
+    console.log('Query results:', results);
     if (results.length === 0) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const user = results[0];
-
-    // Compare password (no hashing involved)
-    if (mot_de_passe !== user.mot_de_passe) {
+    if (password !== user.mot_de_passe) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Store user ID in session
     req.session.userId = user.id_utilisateur;
+    console.log('Session ID set:', req.session.userId);
 
-    // Send response with success
     res.json({ message: 'Login successful', user: { id_utilisateur: user.id_utilisateur, pseudo: user.pseudo } });
   });
 });
