@@ -62,7 +62,7 @@
                 localStorage.setItem('userId', data.user.id_utilisateur);
                 localStorage.setItem('username', data.user.pseudo);
                 alert('Login successful! Welcome, ' + data.user.pseudo);
-                window.location.href = '/dashboard.html'; // Redirect to dashboard
+                window.location.href = '/main.html'; // Redirect to dashboard
             } else {
                 throw new Error('Unexpected response format');
             }

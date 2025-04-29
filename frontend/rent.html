@@ -24,14 +24,17 @@
             card.className = 'col-md-4';
 
             card.innerHTML = `
-          <div class="card shadow-sm">
-            <div class="card-body">
-              <h5 class="card-title">${game.nom}</h5>
-              <p class="card-text">${game.description || 'Aucune description disponible.'}</p>
-              <button class="btn btn-primary w-100" onclick="rentGame(${game.id_jeu})">Louer</button>
-            </div>
-          </div>
-        `;
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">${game.nom}</h5>
+                        <p><strong>Année de publication:</strong> ${game.annee_publication || 'N/A'}</p>
+                        <p><strong>Moyenne:</strong> ${game.average || 'N/A'}</p>
+                        <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
+                        <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
+                        <button class="btn btn-primary w-100" onclick="rentGame(${game.id_jeu})">Louer</button>
+                    </div>
+                </div>
+            `;
 
             container.appendChild(card);
         });
