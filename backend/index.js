@@ -1,29 +1,7 @@
 const express = require('express');
 const db = require('./database'); // 👈 Import the DB connection
 const path = require('path'); // 👈 Add the 'path' import
-const cors = require('cors');
-const session = require('express-session');
 
-// CORS configuration
-app.use(cors({
-  origin: ['http://localhost:3000', 'https://boardtrust-production.up.railway.app'],
-  credentials: true
-}));
-
-// Body parser
-app.use(express.json());
-
-// Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'your-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
 
 require('dotenv').config();
 
