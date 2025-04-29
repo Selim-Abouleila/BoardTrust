@@ -1,26 +1,21 @@
 const express = require('express');
 const db = require('./database'); // 👈 Import the DB connection
+const path = require('path'); // 👈 Add the 'path' import
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+// Serve static files from the "frontend" folder
+app.use(express.static(path.join(__dirname, '../frontend')));
 
-// Test route
+// Serve the index.html when visiting the root
 app.get('/', (req, res) => {
-  res.send('Rental API is running!');
+  res.sendFile(path.join(__dirname, '../frontend', 'main.html'));  // Serve the index page
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
-
-
-
-//RENT GAME
-
+// RENT GAME
 app.post('/rent', (req, res) => {
   const { id_utilisateur, id_jeu, date_retour_prevue } = req.body;
 
@@ -39,7 +34,6 @@ app.post('/rent', (req, res) => {
   });
 });
 
-
 // GET location history
 app.get('/history', (req, res) => {
   const sql = 'SELECT * FROM VueHistoriqueLocation';
@@ -53,7 +47,6 @@ app.get('/history', (req, res) => {
     res.json(results);
   });
 });
-
 
 // RETURN GAME
 app.post('/return', (req, res) => {
@@ -74,7 +67,7 @@ app.post('/return', (req, res) => {
   });
 });
 
-
+// GET list of games
 app.get('/games', (req, res) => {
   const sql = 'SELECT * FROM Jeu';
 
@@ -86,4 +79,9 @@ app.get('/games', (req, res) => {
 
     res.json(results);
   });
+});
+
+// Start server
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
