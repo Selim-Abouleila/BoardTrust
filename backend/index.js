@@ -100,14 +100,20 @@ app.post('/login', (req, res) => {
 // Rent Game
 app.post('/rent', (req, res) => {
   console.log('Rent request body:', req.body);
-  const { id_utilisateur, id_jeu, date_retour_prevue } = req.body;
+  const { id_jeu, date_retour_prevue } = req.body;
 
-  if (!id_utilisateur || !id_jeu || !date_retour_prevue) {
-    return res.status(400).json({ error: 'Missing parameters' });
+  // Check if the user is logged in first.
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+  
+  // Then check that all required parameters are provided.
+  if (!id_jeu || !date_retour_prevue) {
+    return res.status(400).json({ error: 'Missing parameters: id_jeu and/or date_retour_prevue' });
   }
 
   const sql = 'CALL LouerJeu(?, ?, ?)';
-  db.query(sql, [id_utilisateur, id_jeu, date_retour_prevue], (err, result) => {
+  db.query(sql, [req.session.userId, id_jeu, date_retour_prevue], (err, result) => {
     if (err) {
       console.error('Rent SQL Error:', err);
       return res.status(500).json({ error: 'Error while renting game' });
@@ -116,6 +122,7 @@ app.post('/rent', (req, res) => {
     res.json({ message: 'Game rented successfully' });
   });
 });
+
 
 // Get Location History
 app.get('/history', (req, res) => {
@@ -134,26 +141,31 @@ app.get('/history', (req, res) => {
 // Return Game
 app.post('/return', (req, res) => {
   console.log('Return request body:', req.body);
-  const { id_jeu, id_utilisateur } = req.body;
 
-  if (!id_jeu || !id_utilisateur) {
-    return res.status(400).json({ error: 'Missing id_jeu or id_utilisateur' });
+  // Check if the user is logged in.
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+
+  // Extract the required parameter (id_jeu).
+  const { id_jeu } = req.body;
+  if (!id_jeu) {
+    return res.status(400).json({ error: 'Missing parameter: id_jeu' });
   }
 
   const sql = 'CALL RetournerJeu(?, ?)';
   
-  db.query(sql, [id_utilisateur, id_jeu], (err, result) => {
+  // Use the session user ID and the provided id_jeu.
+  db.query(sql, [req.session.userId, id_jeu], (err, result) => {
     if (err) {
       console.error('Return SQL Error:', err);
       return res.status(500).json({ error: 'Error while returning game' });
     }
 
-    // Depending on your MySQL driver, the affected rows may be in a different position.
-    // In many MySQL Node drivers when calling a procedure, the second element contains the OkPacket info.
+    // The affected rows are usually available in result[1]. Check and act accordingly.
     const affectedRows = (result && result[1] && result[1].affectedRows) || 0;
-
     if (affectedRows === 0) {
-      // No rows updated means the game wasn't currently rented by this user.
+      // This means no record was updated; the game might not be currently rented by the user.
       return res.status(400).json({ error: 'Game is not currently being rented.' });
     }
 
