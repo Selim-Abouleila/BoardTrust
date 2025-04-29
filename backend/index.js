@@ -88,16 +88,13 @@ app.listen(port, () => {
 });
 
 
-// User Registration
-app.post('/register', async (req, res) => {
+// User Registration (without bcrypt)
+app.post('/register', (req, res) => {
   const { pseudo, email, mot_de_passe } = req.body;
 
-  // Hash the password before storing
-  const hashedPassword = await bcrypt.hash(mot_de_passe, 10);
-
-  // Call stored procedure to insert user data
+  // Do not hash the password, store it as plain text
   const sql = 'CALL AddUser(?, ?, ?)';
-  db.query(sql, [pseudo, email, hashedPassword], (err, result) => {
+  db.query(sql, [pseudo, email, mot_de_passe], (err, result) => {
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Error registering user' });
@@ -107,7 +104,7 @@ app.post('/register', async (req, res) => {
   });
 });
 
-// User Login
+// User Login (without bcrypt)
 app.post('/login', (req, res) => {
   const { email, mot_de_passe } = req.body;
 
@@ -124,22 +121,15 @@ app.post('/login', (req, res) => {
 
     const user = results[0];
 
-    // Compare hashed passwords
-    bcrypt.compare(mot_de_passe, user.mot_de_passe, (err, isMatch) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ error: 'Error during password comparison' });
-      }
+    // Compare password (no hashing involved)
+    if (mot_de_passe !== user.mot_de_passe) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
 
-      if (!isMatch) {
-        return res.status(401).json({ error: 'Invalid email or password' });
-      }
+    // Store user ID in session
+    req.session.userId = user.id_utilisateur;
 
-      // Store user ID in session
-      req.session.userId = user.id_utilisateur;
-
-      // Send response with success
-      res.json({ message: 'Login successful', user: { id_utilisateur: user.id_utilisateur, pseudo: user.pseudo } });
-    });
+    // Send response with success
+    res.json({ message: 'Login successful', user: { id_utilisateur: user.id_utilisateur, pseudo: user.pseudo } });
   });
 });
