@@ -18,19 +18,27 @@
         <a href="register.html" class="btn btn-secondary btn-lg">👤 S’inscrire</a>
         <a href="login.html" class="btn btn-info btn-lg">🔑 Se connecter</a> <!-- Login link -->
 
-        <!-- Logout button, only visible if user is logged in -->
+        <!-- Logout button -->
         <button id="logoutBtn" class="btn btn-danger btn-lg" style="display: none;" onclick="logout()">🚪 Se déconnecter</button>
     </div>
 </div>
 
 <script>
+    // Check login state
+    document.addEventListener('DOMContentLoaded', () => {
+        const userId = localStorage.getItem('userId'); // Retrieve userId from localStorage
+        if (userId) {
+            // If userId exists, show the logout button
+            document.getElementById('logoutBtn').style.display = 'block';
+        }
+    });
 
     // Logout function
     function logout() {
         // Clear the user data from localStorage
         localStorage.removeItem('userId');
 
-        // Redirect to login page or any other page
+        // Redirect to the login page or any other page
         window.location.href = 'main.html'; // Redirect to the login page after logout
     }
 </script>

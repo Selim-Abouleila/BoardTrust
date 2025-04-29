@@ -27,7 +27,7 @@
     const userId = localStorage.getItem('userId');
     if (userId) {
         console.log('User already logged in, redirecting to dashboard...');
-        window.location.href = '/dashboard.html'; // Redirect to dashboard if logged in
+        window.location.href = '/main.html'; // Redirect to dashboard if logged in
     }
 
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
