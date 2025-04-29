@@ -24,18 +24,6 @@
 </div>
 
 <script>
-    // Check if the user is already logged in
-    window.onload = function() {
-        const userId = localStorage.getItem('userId');
-
-        // If user is already logged in, redirect to the main page or show logout button
-        if (userId) {
-            window.location.href = '/';  // Redirect to home or dashboard page
-        } else {
-            // Show the logout button if the user is logged in
-            document.getElementById("logoutBtn").style.display = "block";
-        }
-    }
 
     // Logout function
     function logout() {
