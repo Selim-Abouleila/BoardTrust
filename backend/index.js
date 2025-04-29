@@ -73,3 +73,17 @@ app.post('/return', (req, res) => {
     res.json({ message: 'Game returned successfully' });
   });
 });
+
+
+app.get('/games', (req, res) => {
+  const sql = 'SELECT * FROM Jeu';
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Error fetching games' });
+    }
+
+    res.json(results);
+  });
+});
