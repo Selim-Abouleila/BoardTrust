@@ -1,6 +1,8 @@
 const express = require('express');
 const db = require('./database'); // 👈 Import the DB connection
 const path = require('path'); // 👈 Add the 'path' import
+const cors = require('cors');
+const session = require('express-session');
 
 require('dotenv').config();
 

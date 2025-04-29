@@ -23,12 +23,13 @@
 
 <script>
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
+        e.preventDefault(); // Prevent default form submission
 
         const email = document.getElementById('email').value;
         const mot_de_passe = document.getElementById('password').value;
 
-        // Send login request to backend
+        console.log("Logging in with email: ", email); // Debugging log
+
         const res = await fetch('https://boardtrust-production.up.railway.app/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -36,9 +37,10 @@
         });
 
         const data = await res.json();
+        console.log(data); // Log the response from the backend
 
         if (data.error) {
-            alert(data.error); // Show error message
+            alert(data.error); // Show error message if login fails
         } else {
             // Store the user ID in localStorage after login
             localStorage.setItem('userId', data.user.id_utilisateur);
@@ -46,6 +48,7 @@
             window.location.href = '/'; // Redirect to the home page or dashboard
         }
     });
+
 </script>
 </body>
 </html>
