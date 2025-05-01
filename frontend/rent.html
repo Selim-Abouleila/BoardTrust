@@ -1,111 +1,155 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Louer un jeu - BoardTrust</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>📦 Louer un jeu – BoardTrust</title>
+
+    <!----- Bootstrap ----->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+    <style>
+        /* same height cards + nicely cropped covers */
+        .card-img-top{
+            height:180px;
+            object-fit:cover;
+        }
+    </style>
 </head>
 <body class="bg-light">
+
 <div class="container py-5">
-    <h2 class="mb-4 text-center">📦 Louer un jeu</h2>
-    <div id="gamesList" class="row g-4"></div>
+    <h1 class="text-center mb-4">📦 Louer un jeu</h1>
+
+    <!-- ONE bootstrap row that will auto-wrap to 1 / 2 / 3 columns -->
+    <div id="gamesList" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"></div>
 </div>
 
-<script>
-    const loggedUserId = 1;  // In a real case, this would be dynamically fetched
+<script type="module">
+    /*-----------------------------------------------------------
+     *  GLOBALS – change only API_ROOT if you move the backend
+     *----------------------------------------------------------*/
+    const API_ROOT      = 'https://boardtrust-production.up.railway.app';
+    const loggedUserId  = 1;           // ← remplace par l’id récupéré après login
 
-    // Fetch games and populate the page
-    async function loadGames() {
+    /*-----------------------------------------------------------
+     *  SMALL UTILITY
+     *----------------------------------------------------------*/
+    async function fetchJSON(url, options = {}) {
+        const res = await fetch(url, options);
+        const data = await res.json();
+        if (!res.ok) {
+            throw new Error(data.error || res.statusText);
+        }
+        return data;
+    }
+
+    /*-----------------------------------------------------------
+     *  LOAD + RENDER GAMES
+     *----------------------------------------------------------*/
+    (async function loadGames() {
         try {
-            const res = await fetch('https://boardtrust-production.up.railway.app/games');
-            const games = await res.json();
-            const container = document.getElementById('gamesList');
+            const games = await fetchJSON(`${API_ROOT}/games`);
 
-            for (const game of games) {
-                // Create a card for each game
-                const card = document.createElement('div');
-                card.className = 'col-md-4 col-sm-6 col-xs-12';
+            /* check, IN PARALLEL, whether the logged user rents each game */
+            const withStatus = await Promise.all(
+                games.map(async g => {
+                    const { rented } = await fetchJSON(`${API_ROOT}/isRented`, {
+                        method : 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu: g.id_jeu })
+                    });
+                    return { ...g, isRentedByUser: rented };   // rented === true ⇢ this user is currently renting
+                })
+            );
 
-                // Check if the game is rented and if the logged user has rented it
-                const isRentedResponse = await fetch('/isRented', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id_utilisateur: loggedUserId, id_jeu: game.id_jeu })
-                });
-                const isRented = await isRentedResponse.json();
-                let actionButton = '';
+            renderGames(withStatus);
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    })();
 
-                // Determine button logic
-                if (isRented.rented) {
-                    if (game.rentingUserId === loggedUserId) {
-                        actionButton = `<button class="btn btn-danger" onclick="returnGame(${game.id_jeu})">Retourner</button>`;
-                    } else {
-                        actionButton = `<button class="btn btn-secondary" disabled>Indisponible</button>`;
-                    }
-                } else {
-                    actionButton = `<button class="btn btn-primary" onclick="rentGame(${game.id_jeu})">Louer</button>`;
-                }
+    /*-----------------------------------------------------------
+     *  CREATE THE CARDS
+     *----------------------------------------------------------*/
+    function renderGames(games) {
+        const wrapper = document.getElementById('gamesList');
+        wrapper.innerHTML = '';                       // reset
 
-                // Build the HTML for the game card
-                card.innerHTML = `
-                    <div class="card shadow-sm border-light">
-                        <img src="${game.imageUrl || 'default-image.png'}" class="card-img-top" alt="${game.nom}">
-                        <div class="card-body">
-                            <h5 class="card-title">${game.nom}</h5>
-                            <p><strong>Année de publication:</strong> ${game.annee_publication || 'N/A'}</p>
-                            <p><strong>Moyenne:</strong> ${game.average || 'N/A'}</p>
-                            <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
-                            <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
-                            <div class="d-grid gap-2">
-                                ${actionButton}
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
+        for (const game of games) {
+            const col = document.createElement('div');
+            col.className = 'col';                    // row-cols-* auto-sizes
+
+            col.innerHTML = `
+          <div class="card h-100 shadow-sm">
+              <img src="${game.imageUrl || 'default-image.png'}"
+                   alt="${game.nom}" class="card-img-top">
+
+              <div class="card-body d-flex flex-column">
+                  <h5 class="card-title">${game.nom}</h5>
+
+                  <p class="small mb-1"><strong>Année :</strong> ${game.annee_publication ?? 'N/A'}</p>
+                  <p class="small mb-1"><strong>Moyenne :</strong> ${game.average ?? 'N/A'}</p>
+                  <p class="small mb-3"><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</p>
+
+                  <div class="mt-auto">
+                      ${game.isRentedByUser
+                ? `<button class="btn btn-danger w-100"
+                                     data-action="return" data-id="${game.id_jeu}">Retourner</button>`
+                : `<button class="btn btn-primary w-100"
+                                     data-action="rent" data-id="${game.id_jeu}">Louer</button>`
             }
-        } catch (error) {
-            console.error('Erreur de chargement des jeux:', error);
+                  </div>
+              </div>
+          </div>`;
+            wrapper.appendChild(col);
         }
     }
 
-    // Function to rent the game
-    async function rentGame(id_jeu) {
-        const date_retour = prompt("Date de retour prévue (AAAA-MM-JJ):");
+    /*-----------------------------------------------------------
+     *  HANDLE BUTTON CLICKS  (event-delegation = 1 listener only)
+     *----------------------------------------------------------*/
+    document.getElementById('gamesList').addEventListener('click', async e => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;                             // click was not on a button
+
+        const id_jeu = Number(btn.dataset.id);
+        const action = btn.dataset.action;
 
         try {
-            const res = await fetch('https://boardtrust-production.up.railway.app/rent', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_utilisateur: loggedUserId, id_jeu, date_retour_prevue: date_retour })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-        } catch (error) {
-            console.error('Erreur lors de la location du jeu:', error);
-        }
-    }
+            if (action === 'rent') {
+                const date_retour_prevue = prompt('Date de retour prévue (AAAA-MM-JJ):');
+                if (!date_retour_prevue) return;
 
-    // Function to return the game
-    async function returnGame(id_jeu) {
-        try {
-            const res = await fetch('https://boardtrust-production.up.railway.app/return', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_utilisateur: loggedUserId, id_jeu })
-            });
-            const data = await res.json();
-            alert(data.message || data.error);
-        } catch (error) {
-            console.error('Erreur lors du retour du jeu:', error);
-        }
-    }
+                const { message } = await fetchJSON(`${API_ROOT}/rent`, {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu, date_retour_prevue })
+                });
+                alert(message);
+            }
 
-    // Load games when the page loads
-    loadGames();
+            if (action === 'return') {
+                if (!confirm('Confirmer le retour du jeu ?')) return;
+
+                const { message } = await fetchJSON(`${API_ROOT}/return`, {
+                    method : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu })
+                });
+                alert(message);
+            }
+
+            /* after any successful action ⇒ refresh the list */
+            await (async () => loadGames())();        // simple reload
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        }
+    });
 </script>
-
 </body>
 </html>
