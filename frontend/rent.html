@@ -2,154 +2,134 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>📦 Louer un jeu – BoardTrust</title>
 
-    <!----- Bootstrap ----->
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* same height cards + nicely cropped covers */
-        .card-img-top{
-            height:180px;
-            object-fit:cover;
-        }
+        .card-img-top{height:180px;object-fit:cover}
     </style>
 </head>
 <body class="bg-light">
 
 <div class="container py-5">
     <h1 class="text-center mb-4">📦 Louer un jeu</h1>
-
-    <!-- ONE bootstrap row that will auto-wrap to 1 / 2 / 3 columns -->
     <div id="gamesList" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4"></div>
 </div>
 
 <script type="module">
-    /*-----------------------------------------------------------
-     *  GLOBALS – change only API_ROOT if you move the backend
-     *----------------------------------------------------------*/
-    const API_ROOT      = 'https://boardtrust-production.up.railway.app';
-    const loggedUserId  = 1;           // ← remplace par l’id récupéré après login
+    /*───────────────────────────────────────────────────────────
+    |  CONFIG & HELPERS
+    └──────────────────────────────────────────────────────────*/
+    const API = 'https://boardtrust-production.up.railway.app';     // ← change only if backend moves
 
-    /*-----------------------------------------------------------
-     *  SMALL UTILITY
-     *----------------------------------------------------------*/
-    async function fetchJSON(url, options = {}) {
-        const res = await fetch(url, options);
+    async function jFetch (url, opts={}) {
+        const res  = await fetch(url, { credentials:'include', ...opts });
         const data = await res.json();
-        if (!res.ok) {
-            throw new Error(data.error || res.statusText);
-        }
+        if (!res.ok) throw new Error(data.error || res.statusText);
         return data;
     }
 
-    /*-----------------------------------------------------------
-     *  LOAD + RENDER GAMES
-     *----------------------------------------------------------*/
-    (async function loadGames() {
-        try {
-            const games = await fetchJSON(`${API_ROOT}/games`);
+    /*───────────────────────────────────────────────────────────
+    |  WHO IS LOGGED IN ?
+    └──────────────────────────────────────────────────────────*/
+    const me = await jFetch(`${API}/me`);
+    if (!me.loggedIn) {
+        alert('Veuillez vous connecter.');
+        location.href = '/login.html';
+        throw new Error('Not authenticated');
+    }
+    const uid = me.id_utilisateur;
 
-            /* check, IN PARALLEL, whether the logged user rents each game */
-            const withStatus = await Promise.all(
-                games.map(async g => {
-                    const { rented } = await fetchJSON(`${API_ROOT}/isRented`, {
-                        method : 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu: g.id_jeu })
-                    });
-                    return { ...g, isRentedByUser: rented };   // rented === true ⇢ this user is currently renting
-                })
-            );
+    /*───────────────────────────────────────────────────────────
+    |  MAIN RENDERING
+    └──────────────────────────────────────────────────────────*/
+    async function loadGames () {
+        const games = await jFetch(`${API}/games`);
 
-            renderGames(withStatus);
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
-        }
-    })();
+        /* ask /isRented for each game in parallel */
+        const gamesWithFlag = await Promise.all(
+            games.map(async g => {
+                const { rented } = await jFetch(`${API}/isRented`, {
+                    method :'POST',
+                    headers : { 'Content-Type':'application/json' },
+                    body : JSON.stringify({ id_utilisateur: uid, id_jeu: g.id_jeu })
+                });
+                return { ...g, rentedByMe: rented };
+            })
+        );
 
-    /*-----------------------------------------------------------
-     *  CREATE THE CARDS
-     *----------------------------------------------------------*/
-    function renderGames(games) {
-        const wrapper = document.getElementById('gamesList');
-        wrapper.innerHTML = '';                       // reset
+        render(gamesWithFlag);
+    }
 
-        for (const game of games) {
+    function render (games) {
+        const wrap = document.getElementById('gamesList');
+        wrap.innerHTML = '';
+
+        for (const g of games) {
             const col = document.createElement('div');
-            col.className = 'col';                    // row-cols-* auto-sizes
+            col.className = 'col';
 
             col.innerHTML = `
-          <div class="card h-100 shadow-sm">
-              <img src="${game.imageUrl || 'default-image.png'}"
-                   alt="${game.nom}" class="card-img-top">
+      <div class="card h-100 shadow-sm">
+        <img src="${g.imageUrl || 'default-image.png'}" alt="${g.nom}" class="card-img-top">
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${g.nom}</h5>
+          <p class="small mb-1"><strong>Année :</strong> ${g.annee_publication ?? 'N/A'}</p>
+          <p class="small mb-1"><strong>Moyenne :</strong> ${g.average ?? 'N/A'}</p>
+          <p class="small mb-3"><strong>Utilisateurs :</strong> ${g.nb_users ?? 'N/A'}</p>
 
-              <div class="card-body d-flex flex-column">
-                  <h5 class="card-title">${game.nom}</h5>
-
-                  <p class="small mb-1"><strong>Année :</strong> ${game.annee_publication ?? 'N/A'}</p>
-                  <p class="small mb-1"><strong>Moyenne :</strong> ${game.average ?? 'N/A'}</p>
-                  <p class="small mb-3"><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</p>
-
-                  <div class="mt-auto">
-                      ${game.isRentedByUser
-                ? `<button class="btn btn-danger w-100"
-                                     data-action="return" data-id="${game.id_jeu}">Retourner</button>`
-                : `<button class="btn btn-primary w-100"
-                                     data-action="rent" data-id="${game.id_jeu}">Louer</button>`
+          <div class="mt-auto">
+            ${g.rentedByMe
+                ? `<button class="btn btn-danger w-100" data-id="${g.id_jeu}" data-action="return">Retourner</button>`
+                : `<button class="btn btn-primary w-100" data-id="${g.id_jeu}" data-action="rent">Louer</button>`
             }
-                  </div>
-              </div>
-          </div>`;
-            wrapper.appendChild(col);
+          </div>
+        </div>
+      </div>`;
+            wrap.appendChild(col);
         }
     }
 
-    /*-----------------------------------------------------------
-     *  HANDLE BUTTON CLICKS  (event-delegation = 1 listener only)
-     *----------------------------------------------------------*/
-    document.getElementById('gamesList').addEventListener('click', async e => {
-        const btn = e.target.closest('button[data-action]');
-        if (!btn) return;                             // click was not on a button
+    /*───────────────────────────────────────────────────────────
+    |  BUTTON HANDLER
+    └──────────────────────────────────────────────────────────*/
+    document.getElementById('gamesList').addEventListener('click', async ev => {
+        const btn = ev.target.closest('button[data-action]');
+        if (!btn) return;
 
         const id_jeu = Number(btn.dataset.id);
         const action = btn.dataset.action;
 
         try {
             if (action === 'rent') {
-                const date_retour_prevue = prompt('Date de retour prévue (AAAA-MM-JJ):');
-                if (!date_retour_prevue) return;
+                const date = prompt('Date de retour prévue (AAAA-MM-JJ):');
+                if (!date) return;
 
-                const { message } = await fetchJSON(`${API_ROOT}/rent`, {
-                    method : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu, date_retour_prevue })
+                await jFetch(`${API}/rent`, {
+                    method :'POST',
+                    headers:{ 'Content-Type':'application/json' },
+                    body: JSON.stringify({ id_jeu, date_retour_prevue: date })
                 });
-                alert(message);
             }
 
             if (action === 'return') {
                 if (!confirm('Confirmer le retour du jeu ?')) return;
-
-                const { message } = await fetchJSON(`${API_ROOT}/return`, {
-                    method : 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body   : JSON.stringify({ id_utilisateur: loggedUserId, id_jeu })
+                await jFetch(`${API}/return`, {
+                    method :'POST',
+                    headers:{ 'Content-Type':'application/json' },
+                    body: JSON.stringify({ id_jeu })
                 });
-                alert(message);
             }
 
-            /* after any successful action ⇒ refresh the list */
-            await (async () => loadGames())();        // simple reload
-
-        } catch (err) {
-            console.error(err);
-            alert(err.message);
+            await loadGames();          // refresh buttons
+        } catch (e) {
+            console.error(e); alert(e.message);
         }
     });
+
+    /* kickoff */
+    loadGames();
 </script>
 </body>
 </html>
