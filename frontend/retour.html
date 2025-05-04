@@ -90,18 +90,16 @@
   // Helper pour formater les dates ISO en jj/mm/aaaa
   function formatDate(val) {
     const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return d.toLocaleDateString('fr-FR');
+    return isNaN(d.getTime()) ? val : d.toLocaleDateString('fr-FR');
   }
 
-  // Vérifie si l'utilisateur est connecté
+  // Vérifie la session
   async function checkLogin() {
     try {
       const res = await fetch('/isLoggedIn', { credentials: 'include' });
       const data = await res.json();
       if (!data.loggedIn) window.location.href = 'login.html';
-    } catch (err) {
-      console.error('Erreur checkLogin:', err);
+    } catch {
       window.location.href = 'login.html';
     }
   }
@@ -110,87 +108,71 @@
   async function fetchRented() {
     try {
       const res = await fetch('/rentedGames', {
-        method: 'POST',
-        credentials: 'include'
+        method: 'POST', credentials: 'include'
       });
-      if (!res.ok) throw new Error('Erreur lors de la récupération des jeux loués');
-      const rented = await res.json();
-      renderRented(rented);
+      if (!res.ok) throw new Error('Erreur de récupération');
+      const games = await res.json();
+      renderRented(games);
     } catch (err) {
       document.getElementById('message').innerText = err.message;
     }
   }
 
-  // Affiche les cartes des jeux loués
+  // Affiche les cartes sans ID ni description
   function renderRented(games) {
     const container = document.getElementById('rented-container');
     const msg = document.getElementById('message');
     container.innerHTML = '';
-    if (!Array.isArray(games) || games.length === 0) {
-      msg.innerText = 'Vous n’avez aucun jeu loué actuellement.';
+    if (!games?.length) {
+      msg.innerText = 'Aucun jeu loué actuellement.';
       return;
     }
     msg.style.display = 'none';
 
-    games.forEach(game => {
-      const card = document.createElement('div');
-      card.className = 'rented-card';
-
-      // Titre
+    games.forEach(g => {
+      const card = document.createElement('div'); card.className = 'rented-card';
       const title = document.createElement('h2');
-      title.innerText = game.nom || 'Jeu sans nom';
+      title.innerText = g.game_name || 'Jeu sans nom';
       card.appendChild(title);
 
-      // Détails (id, dates)
-      const details = document.createElement('div');
-      details.className = 'rented-details';
+      const details = document.createElement('div'); details.className = 'rented-details';
       details.innerHTML = `
-          <div><strong>ID :</strong> ${game.id_jeu}</div>
-          <div><strong>Date de location :</strong> ${formatDate(game.date_location)}</div>
-          <div><strong>Date retour prévue :</strong> ${formatDate(game.date_retour_prevue)}</div>
+          <div><strong>Loué le :</strong> ${formatDate(g.date_location)}</div>
+          <div><strong>Retour prévu :</strong> ${formatDate(g.date_retour_prevue)}</div>
         `;
       card.appendChild(details);
 
-      // Bouton Retourner
-      const controls = document.createElement('div');
-      controls.className = 'controls';
-      const retBtn = document.createElement('button');
-      retBtn.innerText = 'Retourner';
-      retBtn.onclick = () => returnGame(game.id_jeu, retBtn);
-      controls.appendChild(retBtn);
+      const controls = document.createElement('div'); controls.className = 'controls';
+      const btn = document.createElement('button');
+      btn.innerText = 'Retourner';
+      btn.onclick = () => returnGame(g.id_location, btn);
+      controls.appendChild(btn);
       card.appendChild(controls);
 
       container.appendChild(card);
     });
   }
 
-  // Envoie la requête de retour
-  async function returnGame(id_jeu, button) {
-    button.disabled = true;
-    button.innerText = 'En cours...';
+  // POST /return
+  async function returnGame(id_location, btn) {
+    btn.disabled = true; btn.innerText = 'En cours...';
     try {
       const res = await fetch('/return', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_jeu })
+        method: 'POST', credentials: 'include',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ id_jeu: id_location })
       });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || 'Erreur lors du retour');
-      alert('Jeu retourné avec succès !');
-      button.innerText = 'Retourné';
-    } catch (err) {
-      alert('Erreur : ' + err.message);
-      console.error(err);
-      button.disabled = false;
-      button.innerText = 'Retourner';
+      const r = await res.json();
+      if (!res.ok) throw new Error(r.error || 'Erreur');
+      alert('Retour effectué');
+      btn.innerText = 'Retourné';
+    } catch (e) {
+      alert('Erreur : ' + e.message);
+      btn.disabled = false; btn.innerText = 'Retourner';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    await checkLogin();
-    fetchRented();
-  });
+  document.addEventListener('DOMContentLoaded', async () => { await checkLogin(); fetchRented(); });
 </script>
 </body>
 </html>
