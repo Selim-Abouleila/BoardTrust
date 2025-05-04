@@ -29,24 +29,31 @@
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const pseudo = document.getElementById('pseudo').value;
-        const email = document.getElementById('email').value;
-        const mot_de_passe = document.getElementById('password').value;
+        const pseudo = document.getElementById('pseudo').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
 
-        // Send registration request to backend
-        const res = await fetch('https://boardtrust-production.up.railway.app/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pseudo, email, mot_de_passe })
-        });
+        try {
+            const res = await fetch('https://boardtrust-production.up.railway.app/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ pseudo, email, password })  // ✅ CHANGÉ ICI
+            });
 
-        const data = await res.json();
+            const contentType = res.headers.get('content-type');
+            const data = contentType && contentType.includes('application/json')
+                ? await res.json()
+                : { error: 'Erreur inattendue du serveur' };
 
-        if (data.error) {
-            alert(data.error); // Show error message
-        } else {
-            alert('Registration successful');
-            window.location.href = '/login.html'; // Redirect to login page
+            if (!res.ok || data.error) {
+                alert(data.error || 'Erreur lors de l’inscription.');
+            } else {
+                alert('Inscription réussie !');
+                window.location.href = '/login.html';
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Erreur réseau : ' + err.message);
         }
     });
 </script>
