@@ -192,25 +192,41 @@ app.get('/isLoggedIn', (req, res) => {
 });
 
 /* Get location history for the logged-in user */
-app.post('/history', (req, res) => {
+// --- just after your other routes in index.js ---
+
+/*─── HISTORIQUE ────────────────────────────────────────────────*/
+app.get('/api/history', (req, res) => {
   console.log('History request received, session:', req.session);
 
-  if (!req.session.userId) {
+  const userId = req.session.userId;
+  if (!userId) {
     console.log('History request: User not logged in');
     return res.status(401).json({ error: 'User not logged in' });
   }
 
-  console.log('Fetching history for user ID:', req.session.userId);
-  db.query('CALL ViewHistory(?)', [req.session.userId], (err, results) => {
+  console.log('Fetching history for user ID:', userId);
+  db.query('CALL ViewHistory(?)', [userId], (err, results) => {
     if (err) {
       console.error('History SQL Error:', err);
       return res.status(500).json({ error: 'Error fetching history' });
     }
 
-    // MySQL stored procedure results are in results[0]
-    res.json(results[0]);
+    // MySQL returns an array of result‐sets; the first one is our rows
+    const rows = results[0] || [];
+
+    // Map to cleaner keys if you like
+    const history = rows.map(row => ({
+      idLocation:               row.id_location,
+      gameName:                 row.GameName  || row.nom,            // adjust to your column
+      dateLocation:             row.DateLocation,
+      dateRetourPrevue:         row.DateRetourPrevue,
+      dateRetourEffective:      row.DateRetourEffective
+    }));
+
+    res.json(history);
   });
 });
+
 
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER

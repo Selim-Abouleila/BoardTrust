@@ -63,6 +63,13 @@
 </div>
 
 <script>
+    // Helper pour formater les dates ISO en jj/mm/aaaa
+    function formatDate(val) {
+        const d = new Date(val);
+        if (isNaN(d.getTime())) return val;
+        return d.toLocaleDateString('fr-FR');
+    }
+
     // Vérifie si l'utilisateur est connecté
     async function checkLogin() {
         try {
@@ -77,13 +84,10 @@
         }
     }
 
-    // Récupère l'historique
+    // Récupère l'historique au format JSON
     async function fetchHistory() {
         try {
-            const res = await fetch('/history', {
-                method: 'POST',
-                credentials: 'include'
-            });
+            const res = await fetch('/api/history', { credentials: 'include' });
             if (!res.ok) throw new Error('Erreur lors de la récupération de l\'historique');
             const history = await res.json();
             renderTable(history);
@@ -92,7 +96,7 @@
         }
     }
 
-    // Génère le tableau dynamiquement
+    // Génère le tableau dynamiquement avec formatage des dates
     function renderTable(data) {
         const table = document.getElementById('historyTable');
         const msg = document.getElementById('message');
@@ -102,27 +106,35 @@
         }
 
         const headRow = document.getElementById('tableHead');
-        const body = document.getElementById('tableBody');
-        // En-têtes
+        const body    = document.getElementById('tableBody');
+
+        // En-têtes : clés formatées
         Object.keys(data[0]).forEach(key => {
             const th = document.createElement('th');
-            // Mettre des titres en clair
-            th.innerText = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            th.innerText = key
+                .replace(/([A-Z])/g, ' $1')       // camelCase to words
+                .replace(/_/g, ' ')               // snake_case to words
+                .replace(/^./, str => str.toUpperCase());
             headRow.appendChild(th);
         });
-        // Lignes
+
+        // Lignes : valeurs, dates formatées
         data.forEach(item => {
             const tr = document.createElement('tr');
-            Object.values(item).forEach(val => {
+            Object.entries(item).forEach(([key, val]) => {
                 const td = document.createElement('td');
-                td.innerText = val === null ? 'N/A' : val;
+                if (key.toLowerCase().includes('date') && val) {
+                    td.innerText = formatDate(val);
+                } else {
+                    td.innerText = (val === null ? 'N/A' : val);
+                }
                 tr.appendChild(td);
             });
             body.appendChild(tr);
         });
 
         // Affiche le tableau
-        msg.style.display = 'none';
+        msg.style.display   = 'none';
         table.style.display = 'table';
     }
 
