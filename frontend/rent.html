@@ -35,6 +35,14 @@
             font-size: 1.2rem;
             color: #222;
         }
+        .game-details {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .game-details div {
+            margin: 4px 0;
+        }
         .controls {
             display: flex;
             flex-direction: column;
@@ -83,7 +91,7 @@
     function renderGames(games) {
         const container = document.getElementById('games-container');
         container.innerHTML = '';
-        if (games.length === 0) {
+        if (!Array.isArray(games) || games.length === 0) {
             container.innerText = 'Aucun jeu disponible à la location.';
             return;
         }
@@ -92,10 +100,22 @@
             const card = document.createElement('div');
             card.className = 'game-card';
 
-            // Affiche le titre du jeu
+            // Titre du jeu
             const title = document.createElement('h2');
-            title.innerText = game.titre || game.nom || 'Jeu sans nom';
+            title.innerText = game.nom || 'Jeu sans nom';
             card.appendChild(title);
+
+            // Détails du jeu
+            const details = document.createElement('div');
+            details.className = 'game-details';
+            details.innerHTML = `
+          <div><strong>ID :</strong> ${game.id_jeu}</div>
+          <div><strong>Année de publication :</strong> ${game.annee_publication || 'N/A'}</div>
+          <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
+          <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
+          <div><strong>Nombre d'utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
+        `;
+            card.appendChild(details);
 
             // Contrôles de location
             const controls = document.createElement('div');
@@ -143,7 +163,6 @@
             if (!res.ok) throw new Error(result.error || 'Erreur lors de la location');
 
             alert('Jeu loué avec succès !');
-            // Désactiver le bouton après succès
             button.innerText = 'Loué';
             button.disabled = true;
         } catch (err) {
