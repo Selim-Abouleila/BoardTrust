@@ -66,6 +66,28 @@
             font-size: 0.9rem;
             text-align: center;
         }
+        /* Add into your existing <style> */
+        .register-prompt {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+        .register-prompt .btn-register-prompt {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 10px 16px;
+            background-color: #e63946;    /* rouge vif */
+            color: #fff;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+        .register-prompt .btn-register-prompt:hover {
+            opacity: 0.9;
+        }
+
     </style>
 </head>
 <body>
@@ -81,6 +103,13 @@
         <button type="submit">Se connecter</button>
         <div id="errorMsg" class="error"></div>
     </form>
+    <!-- After your </form> but before the closing </div> of .login-container -->
+    <div class="register-prompt">
+        <p>Vous n’avez pas de compte ?
+            <a href="register.html" class="btn-register-prompt">Inscrivez-vous</a>
+        </p>
+    </div>
+
 </div>
 
 <script>
@@ -138,5 +167,11 @@
 
     document.addEventListener('DOMContentLoaded', checkLogin);
 </script>
+<footer class="site-footer">
+    <p>© 2025 BoardTrust. Tous droits réservés.</p>
+    <p class="founders">
+        Fondé par Martrenchar Luc, Doyhenart Xan, Abouleila Selim, Nguema André
+    </p>
+</footer>
 </body>
 </html>

@@ -22,7 +22,8 @@
         }
         header img {
             width: 200px;
-            height: 200px;
+            height: auto;
+            cursor: pointer;
         }
         header h1 {
             margin-top: 10px;
@@ -31,7 +32,7 @@
         }
         .btn-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             width: 100%;
             max-width: 800px;
@@ -50,49 +51,41 @@
             color: #fff;
         }
         .btn:hover { opacity: 0.9; }
-
         .btn-rent { background-color: #e63946; }
         .btn-return { background-color: #2a9d8f; }
         .btn-history { background-color: #f4a261; }
         .btn-register { background-color: #4a5568; }
         .btn-login { background-color: #38bdf8; }
         .btn-logout { background-color: #9b2c2c; }
+        .spacer { visibility: hidden; }
     </style>
 </head>
 <body>
 <header>
-    <img src="/assets/logo.png" alt="BoardTrust logo">
+    <img src="/assets/logo.png" alt="BoardTrust logo" onclick="location.href='main.html'">
     <h1>Bienvenue sur BoardTrust</h1>
     <p>Votre plateforme de location de jeux de société</p>
 </header>
 
 <div class="btn-grid">
+    <!-- 1ère ligne -->
     <a href="rent.html" class="btn btn-rent">🎲 Louer un jeu</a>
     <a href="retour.html" class="btn btn-return">✅ Retourner un jeu</a>
     <a href="history.html" class="btn btn-history">📜 Historique des locations</a>
     <a href="register.html" class="btn btn-register">👤 S’inscrire</a>
+    <!-- 2ème ligne : placeholders pour aligner -->
+    <div class="spacer"></div>
     <a href="login.html" class="btn btn-login">🔑 Se connecter</a>
     <button id="logoutBtn" class="btn btn-logout">🚪 Se déconnecter</button>
+    <div class="spacer"></div>
 </div>
 
 <script>
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
-            const res = await fetch('/logout', {
-                method: 'POST',
-                credentials: 'include'
-            });
-
-            const contentType = res.headers.get('content-type');
-            let data = {};
-            if (contentType && contentType.includes('application/json')) {
-                data = await res.json();
-            }
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Échec de la déconnexion');
-            }
-
+            const res = await fetch('/logout', { method: 'POST', credentials: 'include' });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Échec de la déconnexion');
             alert('Vous avez été déconnecté.');
             window.location.href = 'login.html';
         } catch (err) {
@@ -101,5 +94,11 @@
         }
     });
 </script>
+<footer class="site-footer">
+    <p>© 2025 BoardTrust. Tous droits réservés.</p>
+    <p class="founders">
+        Fondé par Martrenchar Luc, Doyhenart Xan, Abouleila Selim, Nguema André
+    </p>
+</footer>
 </body>
 </html>
