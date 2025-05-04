@@ -87,13 +87,11 @@
 <div id="rented-container"></div>
 
 <script>
-  // Helper pour formater les dates ISO en jj/mm/aaaa
   function formatDate(val) {
     const d = new Date(val);
     return isNaN(d.getTime()) ? val : d.toLocaleDateString('fr-FR');
   }
 
-  // Vérifie la session
   async function checkLogin() {
     try {
       const res = await fetch('/isLoggedIn', { credentials: 'include' });
@@ -104,7 +102,6 @@
     }
   }
 
-  // Récupère les jeux loués
   async function fetchRented() {
     try {
       const res = await fetch('/rentedGames', {
@@ -118,7 +115,6 @@
     }
   }
 
-  // Affiche les cartes sans ID ni description
   function renderRented(games) {
     const container = document.getElementById('rented-container');
     const msg = document.getElementById('message');
@@ -145,7 +141,10 @@
       const controls = document.createElement('div'); controls.className = 'controls';
       const btn = document.createElement('button');
       btn.innerText = 'Retourner';
-      btn.onclick = () => returnGame(g.id_location, btn);
+
+      // ✅ Envoie l’ID du jeu au backend
+      btn.onclick = () => returnGame(g.id_jeu, btn, card);
+
       controls.appendChild(btn);
       card.appendChild(controls);
 
@@ -153,26 +152,31 @@
     });
   }
 
-  // POST /return
-  async function returnGame(id_location, btn) {
-    btn.disabled = true; btn.innerText = 'En cours...';
+  async function returnGame(id_jeu, btn, card) {
+    btn.disabled = true;
+    btn.innerText = 'En cours...';
     try {
       const res = await fetch('/return', {
-        method: 'POST', credentials: 'include',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ id_jeu: id_location })
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_jeu }) // ✅ clé correcte attendue par backend
       });
       const r = await res.json();
       if (!res.ok) throw new Error(r.error || 'Erreur');
       alert('Retour effectué');
-      btn.innerText = 'Retourné';
+      card.remove(); // ✅ supprime la carte une fois le jeu retourné
     } catch (e) {
       alert('Erreur : ' + e.message);
-      btn.disabled = false; btn.innerText = 'Retourner';
+      btn.disabled = false;
+      btn.innerText = 'Retourner';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => { await checkLogin(); fetchRented(); });
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkLogin();
+    fetchRented();
+  });
 </script>
 </body>
 </html>
