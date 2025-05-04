@@ -178,6 +178,19 @@ app.post('/logout', (req, res) => {
   });
 });
 
+/* Check if user is logged in */
+app.get('/isLoggedIn', (req, res) => {
+  console.log('isLoggedIn request received, session:', req.session);
+
+  if (!req.session.userId) {
+    console.log('User not logged in');
+    return res.json({ loggedIn: false });
+  }
+
+  console.log('User is logged in, ID:', req.session.userId);
+  res.json({ loggedIn: true, id_utilisateur: req.session.userId });
+});
+
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
 └────────────────────────────────────────────────────────────────────────*/
