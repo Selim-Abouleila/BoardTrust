@@ -87,7 +87,7 @@
 <div id="rented-container"></div>
 
 <script>
-  // Helper pour formater les dates ISO en jj/mm/aaaa
+  // Formatte les dates ISO en jj/mm/aaaa
   function formatDate(val) {
     const d = new Date(val);
     return isNaN(d.getTime()) ? val : d.toLocaleDateString('fr-FR');
@@ -108,7 +108,8 @@
   async function fetchRented() {
     try {
       const res = await fetch('/rentedGames', {
-        method: 'POST', credentials: 'include'
+        method: 'POST',
+        credentials: 'include'
       });
       if (!res.ok) throw new Error('Erreur de récupération');
       const games = await res.json();
@@ -118,34 +119,38 @@
     }
   }
 
-  // Affiche les cartes sans ID ni description
+  // Affiche les cartes sans l'id_location ni description
   function renderRented(games) {
     const container = document.getElementById('rented-container');
     const msg = document.getElementById('message');
     container.innerHTML = '';
-    if (!games?.length) {
+    if (!Array.isArray(games) || !games.length) {
       msg.innerText = 'Aucun jeu loué actuellement.';
       return;
     }
     msg.style.display = 'none';
 
     games.forEach(g => {
-      const card = document.createElement('div'); card.className = 'rented-card';
+      const card = document.createElement('div');
+      card.className = 'rented-card';
+
       const title = document.createElement('h2');
       title.innerText = g.game_name || 'Jeu sans nom';
       card.appendChild(title);
 
-      const details = document.createElement('div'); details.className = 'rented-details';
-      details.innerHTML = 
+      const details = document.createElement('div');
+      details.className = 'rented-details';
+      details.innerHTML = `
           <div><strong>Loué le :</strong> ${formatDate(g.date_location)}</div>
           <div><strong>Retour prévu :</strong> ${formatDate(g.date_retour_prevue)}</div>
-        ;
+        `;
       card.appendChild(details);
 
-      const controls = document.createElement('div'); controls.className = 'controls';
+      const controls = document.createElement('div');
+      controls.className = 'controls';
       const btn = document.createElement('button');
       btn.innerText = 'Retourner';
-      btn.onclick = () => returnGame(g.id_location, btn);
+      btn.onclick = () => returnGame(g.id_jeu, btn);
       controls.appendChild(btn);
       card.appendChild(controls);
 
@@ -153,26 +158,32 @@
     });
   }
 
-  // POST /return
-  async function returnGame(id_location, btn) {
-    btn.disabled = true; btn.innerText = 'En cours...';
+  // Envoie POST /return avec le vrai id_jeu
+  async function returnGame(id_jeu, btn) {
+    btn.disabled = true;
+    btn.innerText = 'En cours...';
     try {
       const res = await fetch('/return', {
-        method: 'POST', credentials: 'include',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ id_jeu: id_location })
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_jeu })
       });
-      const r = await res.json();
-      if (!res.ok) throw new Error(r.error || 'Erreur');
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Erreur');
       alert('Retour effectué');
       btn.innerText = 'Retourné';
     } catch (e) {
       alert('Erreur : ' + e.message);
-      btn.disabled = false; btn.innerText = 'Retourner';
+      btn.disabled = false;
+      btn.innerText = 'Retourner';
     }
   }
 
-  document.addEventListener('DOMContentLoaded', async () => { await checkLogin(); fetchRented(); });
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkLogin();
+    fetchRented();
+  });
 </script>
 </body>
 </html>

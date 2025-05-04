@@ -43,19 +43,20 @@ DELIMITER //
 
 DELIMITER //
 CREATE PROCEDURE RetournerJeu (
+    IN p_id_utilisateur INT,
     IN p_id_jeu INT
 )
 BEGIN
     UPDATE Location
     SET date_retour_effective = CURDATE()
     WHERE id_jeu = p_id_jeu
+      AND id_utilisateur = p_id_utilisateur
       AND date_retour_effective IS NULL
     ORDER BY date_location ASC
     LIMIT 1;
 END //
-
 DELIMITER ;
-
+CALL RetournerJeu(3, 13);
 
 DELIMITER ;
 
@@ -68,3 +69,114 @@ CALL RetournerJeu(13);
 
 SELECT * FROM Location;
 SELECT * FROM HistoriqueLocation;	
+USE Boardtrust;
+SELECT * FROM Utilisateur WHERE email = 'amin@gmail.com';
+
+
+SELECT * FROM 
+
+DELIMITER //
+CREATE PROCEDURE EstLoue(
+    IN p_id_jeu INT,
+    OUT p_estLoue BOOL
+)
+BEGIN
+    DECLARE v_count INT;
+    
+    SELECT COUNT(*) INTO v_count
+    FROM Location
+    WHERE id_jeu = p_id_jeu
+      AND date_retour_effective IS NULL;
+    
+    SET p_estLoue = (v_count > 0);
+END //
+DELIMITER ;
+SELECT * FROM Location;
+
+
+DELIMITER //
+
+CREATE PROCEDURE EstLoueParUtilisateur(
+    IN p_id_utilisateur INT,
+    IN p_id_jeu INT,
+    OUT p_estLoue BOOL
+)
+BEGIN
+    DECLARE v_count INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO v_count
+    FROM Location
+    WHERE id_jeu = p_id_jeu
+      AND id_utilisateur = p_id_utilisateur
+      AND date_retour_effective IS NULL;
+
+    SET p_estLoue = IF(v_count > 0, TRUE, FALSE);
+END //
+
+DELIMITER ;
+SELECT @isRented AS rented;
+
+CALL EstLoueParUtilisateur(3, 13, @isRented);
+SELECT @isRented AS rented;
+SELECT * FROM Utilisateur WHERE email = 'amin@gmail.com'
+
+
+DELIMITER //
+CREATE PROCEDURE ViewHistory(IN p_id_utilisateur INT)
+BEGIN
+  SELECT 
+    j.nom AS game_name,
+    l.date_location,
+    l.date_retour_prevue,
+    l.date_retour_effective
+  FROM 
+    Location l
+    INNER JOIN Utilisateur u ON l.id_utilisateur = u.id_utilisateur
+    INNER JOIN Jeu j ON l.id_jeu = j.id_jeu
+  WHERE 
+    l.id_utilisateur = p_id_utilisateur
+  ORDER BY 
+    l.date_location DESC;
+END //
+
+DELIMITER ;
+
+CALL ViewHistory(3);
+
+
+
+USE Boardtrust;
+
+DELIMITER //
+
+CREATE PROCEDURE ViewRentedGames(IN p_id_utilisateur INT)
+BEGIN
+  SELECT 
+    l.id_location,
+    l.id_jeu,  -- Added to include the game ID
+    j.nom AS game_name,
+    l.date_location,
+    l.date_retour_prevue,
+    u.pseudo AS user_pseudo
+  FROM 
+    Location l
+    INNER JOIN Utilisateur u ON l.id_utilisateur = u.id_utilisateur
+    INNER JOIN Jeu j ON l.id_jeu = j.id_jeu
+  WHERE 
+    l.id_utilisateur = p_id_utilisateur
+    AND l.date_retour_effective IS NULL
+  ORDER BY 
+    l.date_location DESC;
+END //
+
+DELIMITER ;
+CALL ViewHistory(3);
+
+call ViewRentedGames(3);
+
+CALL RetournerJeu(3, 13);
+CALL RetournerJeu(3, 13);
+CALL RetournerJeu(3, 13);
+CALL RetournerJeu(3, 13);
+
+SELECT * FROM Jeu;

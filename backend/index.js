@@ -127,6 +127,9 @@ app.post('/return', (req, res) => {
   db.query('CALL RetournerJeu(?, ?)', [req.session.userId, id_jeu], (err, result) => {
     if (err) return res.status(500).json({ error: 'Error while returning game' });
 
+    const affectedRows = result?.[1]?.affectedRows || 0;
+    if (!affectedRows) return res.status(400).json({ error: 'Game is not currently being rented.' });
+
     res.json({ message: 'Game returned successfully' });
   });
 });
