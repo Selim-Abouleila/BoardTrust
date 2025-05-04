@@ -157,6 +157,27 @@ app.post('/isRented', (req, res) => {
   });
 });
 
+
+/* Logout endpoint */
+app.post('/logout', (req, res) => {
+  console.log('Logout request received, session:', req.session);
+
+  if (!req.session.userId) {
+    console.log('Logout attempt: User not logged in');
+    return res.status(401).json({ error: 'Must log in first before disconnecting' });
+  }
+
+  console.log('Logging out user with ID:', req.session.userId);
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Failed to log out' });
+    }
+    console.log('User logged out successfully');
+    res.json({ message: 'Logged out successfully' });
+  });
+});
+
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
 └────────────────────────────────────────────────────────────────────────*/
