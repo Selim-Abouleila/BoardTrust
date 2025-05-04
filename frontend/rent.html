@@ -5,11 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Louer un jeu - BoardTrust</title>
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header img {
+            width: 120px;
+            height: auto;
+            cursor: pointer;
         }
         h1 {
             text-align: center;
@@ -20,6 +32,8 @@
             grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             margin-top: 20px;
+            width: 100%;
+            max-width: 1000px;
         }
         .game-card {
             background: #fff;
@@ -69,6 +83,11 @@
     </style>
 </head>
 <body>
+<header>
+    <a href="main.html">
+        <img src="/assets/logo.png" alt="BoardTrust">
+    </a>
+</header>
 <h1>Louer un jeu</h1>
 <div id="games-container">Chargement des jeux...</div>
 
@@ -76,9 +95,7 @@
     // Récupère la liste des jeux disponibles
     async function fetchGames() {
         try {
-            const res = await fetch('/games', {
-                credentials: 'include'
-            });
+            const res = await fetch('/games', { credentials: 'include' });
             if (!res.ok) throw new Error('Erreur lors de la récupération des jeux');
             const games = await res.json();
             renderGames(games);
@@ -109,12 +126,12 @@
             const details = document.createElement('div');
             details.className = 'game-details';
             details.innerHTML = `
-          <div><strong>ID :</strong> ${game.id_jeu}</div>
-          <div><strong>Année de publication :</strong> ${game.annee_publication || 'N/A'}</div>
-          <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
-          <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
-          <div><strong>Nombre d'utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
-        `;
+                    <div><strong>ID :</strong> ${game.id_jeu}</div>
+                    <div><strong>Année de publication :</strong> ${game.annee_publication || 'N/A'}</div>
+                    <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
+                    <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
+                    <div><strong>Nombre d'utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
+                `;
             card.appendChild(details);
 
             // Contrôles de location
@@ -153,9 +170,7 @@
             const res = await fetch('/rent', {
                 method: 'POST',
                 credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ id_jeu, date_retour_prevue })
             });
 

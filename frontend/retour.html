@@ -2,120 +2,195 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Retourner un jeu - BoardTrust</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: #f4f7f6;
       font-family: Arial, sans-serif;
-    }
-    .container {
-      background-color: #fff;
+      background-color: #f4f4f4;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-top: 30px;
     }
-    .card {
+    header {
+      text-align: center;
       margin-bottom: 20px;
-      min-width: 300px;
     }
-    .card-title {
-      white-space: normal;
+    header img {
+      width: 120px;
+      height: auto;
+      cursor: pointer;
+    }
+    h1 {
+      color: #333;
+      text-align: center;
+    }
+    #rented-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+      width: 100%;
+      max-width: 1000px;
+    }
+    .rented-card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .rented-card h2 {
+      margin: 0 0 10px;
+      font-size: 1.2rem;
+      color: #222;
+    }
+    .rented-details {
+      font-size: 0.9rem;
+      color: #555;
+      margin-bottom: 10px;
+    }
+    .rented-details div {
+      margin: 4px 0;
+    }
+    .controls button {
+      padding: 10px;
+      border: none;
+      background: #2a9d8f;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+    .controls button:disabled {
+      background: #ccc;
+      cursor: default;
+    }
+    #message {
+      text-align: center;
+      margin-top: 20px;
+      color: #e63946;
     }
   </style>
 </head>
 <body>
-<div class="container py-5">
-  <h2 class="mb-4 text-center">🔄 Retourner un jeu</h2>
-  <div id="rentedGamesList" class="row g-4"></div>
-</div>
+<header>
+  <a href="main.html"><img src="/assets/logo.png" alt="BoardTrust"></a>
+</header>
+<h1>Vos jeux loués</h1>
+<div id="message">Chargement...</div>
+<div id="rented-container"></div>
 
 <script>
-  // For demonstration, the logged-in user ID is hard-coded.
-  // In your production environment, this should come from your session logic.
-  const loggedUserId = 1;
+  // Helper pour formater les dates ISO en jj/mm/aaaa
+  function formatDate(val) {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return d.toLocaleDateString('fr-FR');
+  }
 
-  /**
-   * Loads all games and then filters them to display only those
-   * that are currently rented by the logged-in user.
-   */
-  async function loadRentedGames() {
+  // Vérifie si l'utilisateur est connecté
+  async function checkLogin() {
     try {
-      // Adjust the URL as needed (localhost vs production).
-      const gamesResponse = await fetch('http://localhost:3000/games', { credentials: 'include' });
-      if (!gamesResponse.ok) {
-        throw new Error(`HTTP error ${gamesResponse.status} fetching games`);
-      }
-      const games = await gamesResponse.json();
-      const container = document.getElementById('rentedGamesList');
-      container.innerHTML = ''; // Clear any previous content.
-
-      // Loop through all games and check if the logged-in user is renting them.
-      for (const game of games) {
-        // Send a POST to /isRented with id_utilisateur and id_jeu.
-        const isRentedResponse = await fetch('http://localhost:3000/isRented', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ id_utilisateur: loggedUserId, id_jeu: game.id_jeu })
-        });
-        const { rented } = await isRentedResponse.json();
-
-        // Only display the game if rented is true.
-        if (rented) {
-          const col = document.createElement('div');
-          col.className = 'col-lg-4 col-md-6 col-sm-12';
-          col.innerHTML = `
-              <div class="card shadow-sm">
-                <div class="card-body">
-                  <h5 class="card-title">${game.nom}</h5>
-                  <p><strong>Année de publication:</strong> ${game.annee_publication || 'N/A'}</p>
-                  <p><strong>Moyenne:</strong> ${game.average || 'N/A'}</p>
-                  <p><strong>Bayes Moyenne:</strong> ${game.bayes_average || 'N/A'}</p>
-                  <p><strong>Nombre d'utilisateurs:</strong> ${game.nb_users || 'N/A'}</p>
-                  <div class="d-grid gap-2">
-                    <button class="btn btn-danger" onclick="returnGame(${game.id_jeu})">Retourner ce jeu</button>
-                  </div>
-                </div>
-              </div>`;
-          container.appendChild(col);
-        }
-      }
-    } catch (error) {
-      console.error('Error loading rented games:', error);
-      alert('Erreur lors du chargement des jeux');
+      const res = await fetch('/isLoggedIn', { credentials: 'include' });
+      const data = await res.json();
+      if (!data.loggedIn) window.location.href = 'login.html';
+    } catch (err) {
+      console.error('Erreur checkLogin:', err);
+      window.location.href = 'login.html';
     }
   }
 
-  /**
-   * Sends a request to return a game.
-   * It calls the /return endpoint with the id_jeu.
-   */
-  async function returnGame(id_jeu) {
+  // Récupère les jeux loués
+  async function fetchRented() {
     try {
-      const returnResponse = await fetch('http://localhost:3000/return', {
+      const res = await fetch('/rentedGames', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (!res.ok) throw new Error('Erreur lors de la récupération des jeux loués');
+      const rented = await res.json();
+      renderRented(rented);
+    } catch (err) {
+      document.getElementById('message').innerText = err.message;
+    }
+  }
+
+  // Affiche les cartes des jeux loués
+  function renderRented(games) {
+    const container = document.getElementById('rented-container');
+    const msg = document.getElementById('message');
+    container.innerHTML = '';
+    if (!Array.isArray(games) || games.length === 0) {
+      msg.innerText = 'Vous n’avez aucun jeu loué actuellement.';
+      return;
+    }
+    msg.style.display = 'none';
+
+    games.forEach(game => {
+      const card = document.createElement('div');
+      card.className = 'rented-card';
+
+      // Titre
+      const title = document.createElement('h2');
+      title.innerText = game.nom || 'Jeu sans nom';
+      card.appendChild(title);
+
+      // Détails (id, dates)
+      const details = document.createElement('div');
+      details.className = 'rented-details';
+      details.innerHTML = `
+          <div><strong>ID :</strong> ${game.id_jeu}</div>
+          <div><strong>Date de location :</strong> ${formatDate(game.date_location)}</div>
+          <div><strong>Date retour prévue :</strong> ${formatDate(game.date_retour_prevue)}</div>
+        `;
+      card.appendChild(details);
+
+      // Bouton Retourner
+      const controls = document.createElement('div');
+      controls.className = 'controls';
+      const retBtn = document.createElement('button');
+      retBtn.innerText = 'Retourner';
+      retBtn.onclick = () => returnGame(game.id_jeu, retBtn);
+      controls.appendChild(retBtn);
+      card.appendChild(controls);
+
+      container.appendChild(card);
+    });
+  }
+
+  // Envoie la requête de retour
+  async function returnGame(id_jeu, button) {
+    button.disabled = true;
+    button.innerText = 'En cours...';
+    try {
+      const res = await fetch('/return', {
+        method: 'POST',
         credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_jeu })
       });
-      const result = await returnResponse.json();
-      if (returnResponse.ok) {
-        alert(result.message || 'Jeu retourné avec succès');
-      } else {
-        alert(result.error || 'Erreur lors du retour du jeu');
-      }
-      // Reload the rented games list after return.
-      loadRentedGames();
-    } catch (error) {
-      console.error('Error returning game:', error);
-      alert('Erreur lors du retour du jeu');
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Erreur lors du retour');
+      alert('Jeu retourné avec succès !');
+      button.innerText = 'Retourné';
+    } catch (err) {
+      alert('Erreur : ' + err.message);
+      console.error(err);
+      button.disabled = false;
+      button.innerText = 'Retourner';
     }
   }
 
-  // Load the rented games when the page loads.
-  loadRentedGames();
+  document.addEventListener('DOMContentLoaded', async () => {
+    await checkLogin();
+    fetchRented();
+  });
 </script>
 </body>
 </html>

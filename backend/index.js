@@ -221,7 +221,26 @@ app.post('/history', (req, res) => {
   });
 });
 
+/* Get currently rented games for the logged-in user */
+app.post('/rentedGames', (req, res) => {
+  console.log('RentedGames request received, session:', req.session);
 
+  if (!req.session.userId) {
+    console.log('RentedGames request: User not logged in');
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+
+  console.log('Fetching rented games for user ID:', req.session.userId);
+  db.query('CALL ViewRentedGames(?)', [req.session.userId], (err, results) => {
+    if (err) {
+      console.error('RentedGames SQL Error:', err);
+      return res.status(500).json({ error: 'Error fetching rented games' });
+    }
+
+    // MySQL stored procedure results are in results[0]
+    res.json(results[0]);
+  });
+});
 
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
