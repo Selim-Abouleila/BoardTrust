@@ -126,10 +126,9 @@
     msg.style.display = 'none';
 
     games.forEach(g => {
-      console.log('Jeu reçu :', g); // Debug
       const id_jeu = g.id_jeu || g.id_game || g.idJeu || null;
       if (!id_jeu) {
-        console.warn('ID du jeu manquant pour :', g);
+        console.warn('ID du jeu introuvable pour ce jeu :', g);
         return;
       }
 
@@ -150,8 +149,10 @@
       btn.innerText = 'Retourner';
 
       btn.onclick = () => returnGame(id_jeu, btn, card);
+
       controls.appendChild(btn);
       card.appendChild(controls);
+
       container.appendChild(card);
     });
   }
@@ -184,4 +185,3 @@
 </script>
 </body>
 </html>
-
