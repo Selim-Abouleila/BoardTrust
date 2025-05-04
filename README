@@ -1,10 +1,10 @@
-# BoardTrust
+*BoardTrust*
 
 BoardTrust is a full-stack board game rental platform with a Node.js/Express/MySQL backend and a vanilla JavaScript/HTML/CSS frontend.
 
 ---
 
-## Features
+*Features*
 
 * Browse and rent board games with a return date picker.
 * Return games you have rented.
@@ -14,16 +14,16 @@ BoardTrust is a full-stack board game rental platform with a Node.js/Express/MyS
 
 ---
 
-## Live Demo
+*Live Demo*
 
 The live version is available at:
-[https://boardtrust-production.up.railway.app](https://boardtrust-production.up.railway.app)
+https://boardtrust-production.up.railway.app/
 
 You can also run the application locally by following the instructions below.
 
 ---
 
-## Tech Stack
+*Tech Stack*
 
 * **Backend**: Node.js, Express.js, MySQL (stored procedures: `LouerJeu`, `RetournerJeu`, `ViewHistory`, `ViewRentedGames`)
 * **Frontend**: Vanilla JavaScript, HTML5, CSS3
@@ -32,15 +32,15 @@ You can also run the application locally by following the instructions below.
 
 ---
 
-## Getting Started
+*Getting Started*
 
-### Prerequisites
+*Prerequisites*
 
 * Node.js v14 or later
 * MySQL server
 * Git
 
-### Installation
+*Installation*
 
 1. **Clone the repository**
 
@@ -74,9 +74,9 @@ You can also run the application locally by following the instructions below.
 
 ---
 
-## Running the Application
+*Running the Application*
 
-### Backend
+Backend
 
 In the `backend` folder, run:
 
@@ -86,13 +86,13 @@ npm start
 
 The API will be available on port 3000.
 
-### Frontend
+Frontend
 
 Open `frontend/main.html` in your browser or serve it via Express’s static middleware.
 
 ---
 
-## API Endpoints
+*API Endpoints*
 
 * `POST /register` — register a new user
 * `POST /login` — authenticate and start session
@@ -105,7 +105,7 @@ Open `frontend/main.html` in your browser or serve it via Express’s static mid
 
 ---
 
-## Project Structure
+*Project Structure*
 
 ```
 boardtrust/
@@ -125,20 +125,3 @@ boardtrust/
 
 ---
 
-## Deployment
-
-1. Push to GitHub and connect your repo to Railway.app
-2. Configure environment variables in Railway settings
-3. Deploy; Railway will handle build and hosting
-
----
-
-## Contributing
-
-Contributions are welcome via issues and pull requests.
-
----
-
-## License
-
-MIT License
