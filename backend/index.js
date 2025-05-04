@@ -121,18 +121,35 @@ app.post('/rent', (req, res) => {
 
 app.post('/return', (req, res) => {
   const { id_jeu } = req.body;
-  if (!req.session.userId)  return res.status(401).json({ error: 'User not logged in' });
-  if (!id_jeu)              return res.status(400).json({ error: 'Missing parameter: id_jeu' });
+  const userId = req.session.userId;
 
-  db.query('CALL RetournerJeu(?, ?)', [req.session.userId, id_jeu], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Error while returning game' });
+  if (!userId) {
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+  if (!id_jeu) {
+    return res.status(400).json({ error: 'Missing parameter: id_jeu' });
+  }
 
-    const affectedRows = result?.[1]?.affectedRows || 0;
-    if (!affectedRows) return res.status(400).json({ error: 'Game is not currently being rented.' });
+  db.query('CALL RetournerJeu(?, ?)', [userId, id_jeu], (err, resultSets) => {
+    if (err) {
+      console.error('Return SQL Error:', err);
+      return res.status(500).json({ error: 'Error while returning game' });
+    }
+
+    // resultSets is an array; the last element is the OkPacket for the UPDATE
+    const okPacket = Array.isArray(resultSets)
+      ? resultSets[resultSets.length - 1]
+      : resultSets;
+
+    const affectedRows = okPacket.affectedRows || 0;
+    if (affectedRows === 0) {
+      return res.status(400).json({ error: 'Game is not currently being rented.' });
+    }
 
     res.json({ message: 'Game returned successfully' });
   });
 });
+
 
 /*──── READ-ONLY HELPERS ────────────────────────────────────────────────*/
 
