@@ -84,26 +84,32 @@
 </div>
 
 <script>
-    // Si déjà connecté, on redirige tout de suite
     async function checkLogin() {
         try {
             const res = await fetch('/isLoggedIn', { credentials: 'include' });
+            const contentType = res.headers.get('content-type');
+
+            if (!res.ok || !contentType || !contentType.includes('application/json')) {
+                console.warn("Réponse invalide ou serveur indisponible pour /isLoggedIn");
+                return;
+            }
+
             const json = await res.json();
             if (json.loggedIn) {
                 window.location.href = 'main.html';
             }
         } catch (err) {
-            console.error('Erreur isLoggedIn:', err);
+            console.warn('Erreur de vérification de session :', err);
         }
     }
 
-    // Soumission du formulaire
     document.getElementById('loginForm').addEventListener('submit', async e => {
         e.preventDefault();
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+        const errorMsg = document.getElementById('errorMsg');
+        errorMsg.innerText = '';
 
-        document.getElementById('errorMsg').innerText = '';
         try {
             const res = await fetch('/login', {
                 method: 'POST',
@@ -111,15 +117,22 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            const data = await res.json();
+
+            const contentType = res.headers.get('content-type');
+            let data = {};
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await res.json();
+            }
+
             if (!res.ok) {
                 throw new Error(data.error || 'Échec de la connexion');
             }
-            // Succès → redirection
+
             window.location.href = 'main.html';
         } catch (err) {
-            document.getElementById('errorMsg').innerText = err.message;
-            console.error(err);
+            errorMsg.innerText = err.message;
+            console.error('Erreur lors de la connexion :', err);
         }
     });
 
