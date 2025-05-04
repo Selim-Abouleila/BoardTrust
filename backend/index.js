@@ -191,6 +191,27 @@ app.get('/isLoggedIn', (req, res) => {
   res.json({ loggedIn: true, id_utilisateur: req.session.userId });
 });
 
+/* Get location history for the logged-in user */
+app.post('/history', (req, res) => {
+  console.log('History request received, session:', req.session);
+
+  if (!req.session.userId) {
+    console.log('History request: User not logged in');
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+
+  console.log('Fetching history for user ID:', req.session.userId);
+  db.query('CALL ViewHistory(?)', [req.session.userId], (err, results) => {
+    if (err) {
+      console.error('History SQL Error:', err);
+      return res.status(500).json({ error: 'Error fetching history' });
+    }
+
+    // MySQL stored procedure results are in results[0]
+    res.json(results[0]);
+  });
+});
+
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
 └────────────────────────────────────────────────────────────────────────*/
