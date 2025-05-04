@@ -42,12 +42,13 @@ app.use(session({
 /*─────────────────────────────────────────────────────────────────────────
 │  DATABASE CONNECTIVITY (one early check)
 └────────────────────────────────────────────────────────────────────────*/
-db.connect(err => {
+db.getConnection((err, conn) => {
   if (err) {
-    console.error('❌ Database connection error:', err);
+    console.error('❌ Unable to reach database:', err);
     process.exit(1);
   }
-  console.log('✅ Connected to database');
+  console.log('✅ Database is reachable');
+  conn.release();  // return to the pool
 });
 
 /*─────────────────────────────────────────────────────────────────────────
