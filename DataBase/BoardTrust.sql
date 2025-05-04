@@ -7,7 +7,7 @@ CREATE TABLE Jeu (
   annee_publication INT,
   average INT,
   bayes_average INT,
-  users_rated INT
+  nb_users INT
 );
 
 CREATE TABLE Utilisateur (

@@ -49,15 +49,23 @@
             cursor: pointer;
             transition: background-color 0.2s;
             color: #fff;
+            background-color: #e63946;
         }
         .btn:hover { opacity: 0.9; }
-        .btn-rent { background-color: #e63946; }
-        .btn-return { background-color: #e63946; }
-        .btn-history { background-color: #e63946; }
-        .btn-register { background-color: #e63946; }
-        .btn-login { background-color: #e63946; }
-        .btn-logout { background-color: #e63946; }
         .spacer { visibility: hidden; }
+
+        /* Banner Styles */
+        .banner-container {
+            margin: 40px auto;
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+        }
+        .banner-container img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+        }
     </style>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -70,15 +78,20 @@
 
 <div class="btn-grid">
     <!-- 1ère ligne -->
-    <a href="rent.html" class="btn btn-rent">🎲 Louer un jeu</a>
-    <a href="retour.html" class="btn btn-return">✅ Retourner un jeu</a>
-    <a href="history.html" class="btn btn-history">📜 Historique des locations</a>
-    <a href="register.html" class="btn btn-register">👤 S’inscrire</a>
+    <a href="rent.html" class="btn">🎲 Louer un jeu</a>
+    <a href="retour.html" class="btn">✅ Retourner un jeu</a>
+    <a href="history.html" class="btn">📜 Historique des locations</a>
+    <a href="register.html" class="btn">👤 S’inscrire</a>
     <!-- 2ème ligne : placeholders pour aligner -->
     <div class="spacer"></div>
-    <a href="login.html" class="btn btn-login">🔑 Se connecter</a>
-    <button id="logoutBtn" class="btn btn-logout">🚪 Se déconnecter</button>
+    <a href="login.html" class="btn">🔑 Se connecter</a>
+    <button id="logoutBtn" class="btn">🚪 Se déconnecter</button>
     <div class="spacer"></div>
+</div>
+
+<!-- Banner Image -->
+<div class="banner-container">
+    <img src="/assets/banner.png" alt="BoardTrust Banner">
 </div>
 
 <script>
@@ -95,10 +108,10 @@
         }
     });
 </script>
+
 <footer class="site-footer">
     <p>© 2025 BoardTrust. Tous droits réservés.</p>
     <p>Fondé par Martrenchar Luc, Doyhenart Xan, Abouleila Selim, Nguema André</p>
 </footer>
-
 </body>
 </html>
