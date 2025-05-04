@@ -137,7 +137,7 @@ app.post('/return', (req, res) => {
 /*──── READ-ONLY HELPERS ────────────────────────────────────────────────*/
 
 app.get('/games', (_, res) => {
-  db.query('SELECT * FROM Jeu', (err, results) => {
+  db.query('SELECT * FROM VueJeuSansDescription', (err, results) => {
     if (err) return res.status(500).json({ error: 'Error fetching games' });
     res.json(results);
   });
