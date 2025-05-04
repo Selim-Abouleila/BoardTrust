@@ -2,7 +2,6 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Create a MySQL pool (auto-reconnects on dropped sockets)
 const pool = mysql.createPool({
   host            : process.env.DB_HOST,
   port            : process.env.DB_PORT,
@@ -14,9 +13,9 @@ const pool = mysql.createPool({
   queueLimit         : 0
 });
 
-// Optional: expose promise-based pool if you prefer async/await
-// const promisePool = pool.promise();
-// module.exports = promisePool;
-
-// Or export the callback-style pool directly:
-module.exports = pool;
+// Now export exactly the same interface your routes expect:
+module.exports = {
+  query: (...args) => pool.query(...args),
+  // if you ever need to get a raw connection:
+  getConnection: (...args) => pool.getConnection(...args),
+};
