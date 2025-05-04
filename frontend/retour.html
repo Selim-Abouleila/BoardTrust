@@ -126,6 +126,13 @@
     msg.style.display = 'none';
 
     games.forEach(g => {
+      console.log('Jeu reçu :', g); // Debug
+      const id_jeu = g.id_jeu || g.id_game || g.idJeu || null;
+      if (!id_jeu) {
+        console.warn('ID du jeu manquant pour :', g);
+        return;
+      }
+
       const card = document.createElement('div'); card.className = 'rented-card';
       const title = document.createElement('h2');
       title.innerText = g.game_name || 'Jeu sans nom';
@@ -142,12 +149,9 @@
       const btn = document.createElement('button');
       btn.innerText = 'Retourner';
 
-      // ✅ Envoie l’ID du jeu au backend
-      btn.onclick = () => returnGame(g.id_jeu, btn, card);
-
+      btn.onclick = () => returnGame(id_jeu, btn, card);
       controls.appendChild(btn);
       card.appendChild(controls);
-
       container.appendChild(card);
     });
   }
@@ -160,12 +164,12 @@
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id_jeu }) // ✅ clé correcte attendue par backend
+        body: JSON.stringify({ id_jeu })
       });
       const r = await res.json();
       if (!res.ok) throw new Error(r.error || 'Erreur');
       alert('Retour effectué');
-      card.remove(); // ✅ supprime la carte une fois le jeu retourné
+      card.remove();
     } catch (e) {
       alert('Erreur : ' + e.message);
       btn.disabled = false;
@@ -180,3 +184,4 @@
 </script>
 </body>
 </html>
+
