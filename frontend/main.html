@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BoardTrust - Accueil</title>
     <style>
-        /* Reset minimal */
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -79,13 +78,25 @@
 <script>
     document.getElementById('logoutBtn').addEventListener('click', async () => {
         try {
-            const res = await fetch('/logout', { method: 'POST', credentials: 'include' });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Échec de la déconnexion');
+            const res = await fetch('/logout', {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            const contentType = res.headers.get('content-type');
+            let data = {};
+            if (contentType && contentType.includes('application/json')) {
+                data = await res.json();
+            }
+
+            if (!res.ok) {
+                throw new Error(data.error || 'Échec de la déconnexion');
+            }
+
             alert('Vous avez été déconnecté.');
             window.location.href = 'login.html';
         } catch (err) {
-            console.error(err);
+            console.error('Erreur de déconnexion :', err);
             alert('Erreur : ' + err.message);
         }
     });
