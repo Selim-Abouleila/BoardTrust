@@ -1,4 +1,4 @@
-*BoardTrust*
+##BoardTrust
 
 BoardTrust is a full-stack board game rental platform with a Node.js/Express/MySQL backend and a vanilla JavaScript/HTML/CSS frontend.
 
