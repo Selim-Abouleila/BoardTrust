@@ -195,37 +195,32 @@ app.get('/isLoggedIn', (req, res) => {
 // --- just after your other routes in index.js ---
 
 /*─── HISTORIQUE ────────────────────────────────────────────────*/
-app.get('/api/history', (req, res) => {
+// À placer avec vos autres routes, après la configuration de session et db.connect
+app.post('/history', (req, res) => {
   console.log('History request received, session:', req.session);
 
-  const userId = req.session.userId;
-  if (!userId) {
+  // 1) Vérifier que l'utilisateur est authentifié
+  if (!req.session.userId) {
     console.log('History request: User not logged in');
     return res.status(401).json({ error: 'User not logged in' });
   }
 
+  const userId = req.session.userId;
   console.log('Fetching history for user ID:', userId);
+
+  // 2) Appeler la procédure MySQL
   db.query('CALL ViewHistory(?)', [userId], (err, results) => {
     if (err) {
       console.error('History SQL Error:', err);
       return res.status(500).json({ error: 'Error fetching history' });
     }
 
-    // MySQL returns an array of result‐sets; the first one is our rows
-    const rows = results[0] || [];
-
-    // Map to cleaner keys if you like
-    const history = rows.map(row => ({
-      idLocation:               row.id_location,
-      gameName:                 row.GameName  || row.nom,            // adjust to your column
-      dateLocation:             row.DateLocation,
-      dateRetourPrevue:         row.DateRetourPrevue,
-      dateRetourEffective:      row.DateRetourEffective
-    }));
-
+    // 3) results[0] contient le tableau des enregistrements retournés
+    const history = results[0] || [];
     res.json(history);
   });
 });
+
 
 
 /*─────────────────────────────────────────────────────────────────────────

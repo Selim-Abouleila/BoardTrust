@@ -84,10 +84,13 @@
         }
     }
 
-    // Récupère l'historique au format JSON
+    // Récupère l'historique avec POST /history
     async function fetchHistory() {
         try {
-            const res = await fetch('/api/history', { credentials: 'include' });
+            const res = await fetch('/history', {
+                method: 'POST',
+                credentials: 'include'
+            });
             if (!res.ok) throw new Error('Erreur lors de la récupération de l\'historique');
             const history = await res.json();
             renderTable(history);
@@ -99,7 +102,7 @@
     // Génère le tableau dynamiquement avec formatage des dates
     function renderTable(data) {
         const table = document.getElementById('historyTable');
-        const msg = document.getElementById('message');
+        const msg   = document.getElementById('message');
         if (!Array.isArray(data) || data.length === 0) {
             msg.innerText = 'Aucun historique de location.';
             return;
@@ -112,8 +115,8 @@
         Object.keys(data[0]).forEach(key => {
             const th = document.createElement('th');
             th.innerText = key
-                .replace(/([A-Z])/g, ' $1')       // camelCase to words
-                .replace(/_/g, ' ')               // snake_case to words
+                .replace(/([A-Z])/g, ' $1')   // camelCase en mots
+                .replace(/_/g, ' ')           // snake_case en mots
                 .replace(/^./, str => str.toUpperCase());
             headRow.appendChild(th);
         });
