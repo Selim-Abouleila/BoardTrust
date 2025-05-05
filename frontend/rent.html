@@ -154,6 +154,13 @@
             const controls = document.createElement('div');
             controls.className = 'controls';
 
+            // Étiquette pour expliquer le champ date
+            const returnLabel = document.createElement('label');
+            returnLabel.innerText = 'Date de retour prévue :';
+            returnLabel.style.fontSize = '0.9rem';
+            returnLabel.style.color = '#333';
+            controls.appendChild(returnLabel);
+
             // Date de retour prévue
             const dateInput = document.createElement('input');
             dateInput.type = 'date';
