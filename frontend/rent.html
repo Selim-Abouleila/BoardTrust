@@ -95,25 +95,31 @@
 <script>
     // Récupère la liste des jeux disponibles pour cet utilisateur
     async function fetchGames() {
+        const container = document.getElementById('games-container');
+
         try {
             const res = await fetch('/availableGames', {
                 method: 'POST',
                 credentials: 'include'
             });
+
             if (res.status === 401) {
-                // user not logged in
                 container.innerText = 'Veuillez vous connecter pour louer un jeu.';
-                // or to force a redirect:
-                // window.location.href = 'login.html';
                 return;
             }
-            if (!res.ok) throw new Error('Erreur lors de la récupération des jeux');
+
+            if (!res.ok) {
+                throw new Error('Erreur lors de la récupération des jeux');
+            }
+
             const games = await res.json();
             renderGames(games);
         } catch (err) {
-            document.getElementById('games-container').innerText = err.message;
+            // reuse the same container reference
+            container.innerText = err.message;
         }
     }
+
 
     // Affiche les cartes de jeux
     function renderGames(games) {
