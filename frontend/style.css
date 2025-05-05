@@ -12,3 +12,13 @@
 .site-footer p + p {
     margin-top: 4px;
 }
+
+/* Logo hover effect */
+.logo {
+    cursor: pointer;               /* pointing hand */
+    transition: transform 0.2s ease-in-out;
+}
+.logo:hover {
+    transform: scale(1.1);         /* 10% larger on hover */
+}
+
