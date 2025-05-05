@@ -93,10 +93,13 @@
 <div id="games-container">Chargement des jeux...</div>
 
 <script>
-    // Récupère la liste des jeux disponibles
+    // Récupère la liste des jeux disponibles pour cet utilisateur
     async function fetchGames() {
         try {
-            const res = await fetch('/games', { credentials: 'include' });
+            const res = await fetch('/availableGames', {
+                method: 'POST',
+                credentials: 'include'
+            });
             if (!res.ok) throw new Error('Erreur lors de la récupération des jeux');
             const games = await res.json();
             renderGames(games);
@@ -127,12 +130,11 @@
             const details = document.createElement('div');
             details.className = 'game-details';
             details.innerHTML = `
-                    <div><strong>ID :</strong> ${game.id_jeu}</div>
-                    <div><strong>Année de publication :</strong> ${game.annee_publication || 'N/A'}</div>
-                    <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
-                    <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
-                    <div><strong>Nombre d'utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
-                `;
+          <div><strong>Année :</strong> ${game.annee_publication || 'N/A'}</div>
+          <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
+          <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
+          <div><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
+        `;
             card.appendChild(details);
 
             // Contrôles de location
@@ -180,7 +182,6 @@
 
             alert('Jeu loué avec succès !');
             button.innerText = 'Loué';
-            button.disabled = true;
         } catch (err) {
             alert('Erreur : ' + err.message);
             console.error(err);
@@ -195,6 +196,5 @@
     <p>© 2025 BoardTrust. Tous droits réservés.</p>
     <p>Fondé par Martrenchar Luc, Doyhenart Xan, Abouleila Selim, Nguema André</p>
 </footer>
-
 </body>
 </html>

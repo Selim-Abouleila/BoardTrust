@@ -260,6 +260,29 @@ app.post('/rentedGames', (req, res) => {
   });
 });
 
+
+app.post('/availableGames', (req, res) => {
+  // 1. Ensure user is logged in
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+
+  // 2. Call the stored procedure
+  db.query(
+    'CALL ViewAvailableGamesForUser(?)',
+    [req.session.userId],
+    (err, results) => {
+      if (err) {
+        console.error('AvailableGames SQL Error:', err);
+        return res.status(500).json({ error: 'Error fetching available games' });
+      }
+
+      // 3. results[0] contains the result set
+      res.json(results[0]);
+    }
+  );
+});
+
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
 └────────────────────────────────────────────────────────────────────────*/
