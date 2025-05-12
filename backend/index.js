@@ -111,14 +111,29 @@ app.get('/me', (req, res) => {
 
 app.post('/rent', (req, res) => {
   const { id_jeu, date_retour_prevue } = req.body;
-  if (!req.session.userId)          return res.status(401).json({ error: 'User not logged in' });
-  if (!id_jeu || !date_retour_prevue) return res.status(400).json({ error: 'Missing parameters' });
+  if (!req.session.userId)
+    return res.status(401).json({ error: 'User not logged in' });
+  if (!id_jeu || !date_retour_prevue)
+    return res.status(400).json({ error: 'Missing parameters' });
 
-  db.query('CALL LouerJeu(?, ?, ?)', [req.session.userId, id_jeu, date_retour_prevue], err => {
-    if (err)  return res.status(500).json({ error: 'Error while renting game' });
-    res.json({ message: 'Game rented successfully' });
-  });
+  db.query(
+    'CALL LouerJeu(?, ?, ?)',
+    [req.session.userId, id_jeu, date_retour_prevue],
+    (err) => {
+      if (err) {
+        // detect our custom SIGNAL
+        if (err.sqlState === '45000' &&
+            err.message.includes('rupture de stock')) {
+          return res.status(400).json({ error: 'Jeu en rupture de stock' });
+        }
+        console.error('Rent SQL Error:', err);
+        return res.status(500).json({ error: 'Error while renting game' });
+      }
+      res.json({ message: 'Game rented successfully' });
+    }
+  );
 });
+
 
 app.post('/return', (req, res) => {
   const { id_jeu } = req.body;

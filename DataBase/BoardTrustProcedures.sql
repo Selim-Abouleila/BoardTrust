@@ -14,6 +14,7 @@ DELIMITER ;
 
 CALL AddUser('Selim Abouleila', 'selimabouleila@gmail.com','123');
 
+DROP PROCEDURE LouerJeu;
 DELIMITER //
 
 CREATE PROCEDURE LouerJeu (
@@ -41,12 +42,15 @@ DELIMITER ;
 
 DELIMITER //
 
+DROP PROCEDURE IF EXISTS RetournerJeu;
 DELIMITER //
+
 CREATE PROCEDURE RetournerJeu (
     IN p_id_utilisateur INT,
-    IN p_id_jeu INT
+    IN p_id_jeu         INT
 )
 BEGIN
+    -- 1) Mark the earliest open rental as returned
     UPDATE Location
     SET date_retour_effective = CURDATE()
     WHERE id_jeu = p_id_jeu
@@ -54,8 +58,16 @@ BEGIN
       AND date_retour_effective IS NULL
     ORDER BY date_location ASC
     LIMIT 1;
+
+    -- 2) If we actually updated a row above, bump the stock
+    IF ROW_COUNT() > 0 THEN
+      UPDATE Jeu
+      SET stock = stock + 1
+      WHERE id_jeu = p_id_jeu;
+    END IF;
 END //
 DELIMITER ;
+
 CALL RetournerJeu(3, 13);
 
 DELIMITER ;
@@ -209,4 +221,92 @@ DELIMITER ;
 CALL ViewAvailableGamesForUser(3);
 
 
-USE Boardtrust;
+DELIMITER //
+
+CREATE PROCEDURE LouerJeu (
+    IN p_id_utilisateur INT,
+    IN p_id_jeu         INT,
+    IN p_date_retour_prevue DATE
+)
+BEGIN
+    -- 1) Insert the new rental
+    INSERT INTO Location (
+        id_utilisateur,
+        id_jeu,
+        date_location,
+        date_retour_prevue,
+        date_retour_effective
+    ) VALUES (
+        p_id_utilisateur,
+        p_id_jeu,
+        CURDATE(),
+        p_date_retour_prevue,
+        NULL
+    );
+
+    -- 2) Decrement stock by 1
+    UPDATE Jeu
+    SET stock = stock - 1
+    WHERE id_jeu = p_id_jeu;
+END //
+
+DELIMITER ;
+
+
+ALTER TABLE Jeu
+  DROP COLUMN stock,
+  ADD COLUMN stock INT NOT NULL DEFAULT 3;
+  
+  CALL LouerJeu(
+  1,               -- p_id_utilisateur (ex: user #1)
+  42,              -- p_id_jeu         (ex: game #42)
+  '2025-06-01'     -- p_date_retour_prevue
+);
+
+
+
+DROP PROCEDURE IF EXISTS LouerJeu;
+DELIMITER //
+
+CREATE PROCEDURE LouerJeu (
+  IN p_id_utilisateur      INT,
+  IN p_id_jeu              INT,
+  IN p_date_retour_prevue  DATE
+)
+BEGIN
+  DECLARE v_stock INT;
+
+  -- get current stock
+  SELECT stock
+    INTO v_stock
+    FROM Jeu
+    WHERE id_jeu = p_id_jeu
+    FOR UPDATE;  -- lock the row to avoid race conditions
+
+  -- refuse if none left
+  IF v_stock <= 0 THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Jeu en rupture de stock';
+  ELSE
+    -- otherwise insert & decrement as before
+    INSERT INTO Location (
+      id_utilisateur,
+      id_jeu,
+      date_location,
+      date_retour_prevue,
+      date_retour_effective
+    ) VALUES (
+      p_id_utilisateur,
+      p_id_jeu,
+      CURDATE(),
+      p_date_retour_prevue,
+      NULL
+    );
+
+    UPDATE Jeu
+      SET stock = stock - 1
+      WHERE id_jeu = p_id_jeu;
+  END IF;
+END //
+DELIMITER ;
+

@@ -89,11 +89,7 @@
 <body>
 <header>
     <a href="main.html" title="BoardTrust">
-        <img
-                src="/assets/logo.png"
-                alt="BoardTrust logo"
-                class="logo"
-        >
+        <img src="/assets/logo.png" alt="BoardTrust logo" class="logo">
     </a>
 </header>
 <h1>Louer un jeu</h1>
@@ -152,6 +148,7 @@
                 <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
                 <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
                 <div><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
+                <div><strong>Stock :</strong> ${game.stock ?? 0}</div>
             `;
             card.appendChild(details);
 
@@ -178,6 +175,14 @@
             const rentBtn = document.createElement('button');
             rentBtn.innerText = 'Louer';
             rentBtn.onclick = () => rentGame(game.id_jeu, dateInput.value, rentBtn);
+
+            // Désactiver si stock à 0
+            if ((game.stock ?? 0) <= 0) {
+                rentBtn.disabled = true;
+                rentBtn.innerText = 'Indisponible';
+                dateInput.disabled = true;
+            }
+
             controls.appendChild(rentBtn);
 
             // Bouton Ajouter un commentaire
@@ -231,9 +236,9 @@
 
     // Affiche une boîte de dialogue pour ajouter un commentaire
     async function addCommentPrompt(id_jeu) {
-        const contenu = prompt('Entrez votre commentaire :');
+        const contenu = prompt('Entrez votre commentaire :');
         if (contenu === null) return;
-        let note = prompt('Entrez votre note (0.0 à 5.0) :');
+        let note = prompt('Entrez votre note (0.0 à 5.0) :');
         if (note === null) return;
         note = parseFloat(note);
         if (isNaN(note) || note < 0 || note > 5) {
@@ -251,7 +256,7 @@
             const result = await res.json();
             if (!res.ok) throw new Error(result.error || 'Erreur lors de l\'ajout du commentaire');
 
-            alert('Commentaire ajouté !');
+            alert('Commentaire ajouté !');
         } catch (err) {
             alert('Erreur : ' + err.message);
             console.error(err);
