@@ -63,7 +63,6 @@ You can also run the application locally by following the instructions below.
    DB_USER=root
    DB_PASSWORD=your_password
    DB_NAME=boardtrust
-   SESSION_SECRET=yourSecret
    ```
 4. **Initialize the database**
 
