@@ -180,3 +180,33 @@ CALL RetournerJeu(3, 13);
 CALL RetournerJeu(3, 13);
 
 SELECT * FROM Jeu;
+
+USE Boardtrust;
+DELIMITER //
+
+CREATE PROCEDURE ViewAvailableGamesForUser(IN p_id_utilisateur INT)
+BEGIN
+  SELECT 
+    j.id_jeu,
+    j.nom,
+    j.annee_publication,
+    j.average,
+    j.bayes_average,
+    j.nb_users
+  FROM Jeu AS j
+  WHERE NOT EXISTS (
+    SELECT 1
+    FROM Location AS l
+    WHERE l.id_jeu = j.id_jeu
+      AND l.id_utilisateur = p_id_utilisateur
+      AND l.date_retour_effective IS NULL
+  )
+  ORDER BY j.nom;
+END;
+//
+DELIMITER ;
+
+CALL ViewAvailableGamesForUser(3);
+
+
+USE Boardtrust;

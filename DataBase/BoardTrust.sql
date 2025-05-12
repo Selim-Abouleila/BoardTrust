@@ -17,12 +17,13 @@ CREATE TABLE Utilisateur (
   mot_de_passe VARCHAR(255) NOT NULL,
   date_inscription DATE NOT NULL
 );
-
+USE Boardtrust;
+DROP TABLE Commentaire;
 CREATE TABLE Commentaire (
   id_commentaire INT PRIMARY KEY AUTO_INCREMENT,
   id_jeu INT NOT NULL,
   id_utilisateur INT NOT NULL,
-  contenu TEXT,
+  contenu VARCHAR(200),
   note FLOAT,
   date_creation DATETIME NOT NULL,
   FOREIGN KEY (id_jeu) REFERENCES Jeu(id_jeu),
@@ -54,3 +55,31 @@ CREATE TABLE HistoriqueLocation (
     FOREIGN KEY (id_jeu) REFERENCES Jeu(id_jeu)
 );
 
+USE Boardtrust;
+DELIMITER //
+
+CREATE PROCEDURE AddComment(
+  IN p_id_utilisateur INT,
+  IN p_id_jeu         INT,
+  IN p_contenu        VARCHAR(200),
+  IN p_note           FLOAT
+)
+BEGIN
+  INSERT INTO Commentaire (
+    id_jeu,
+    id_utilisateur,
+    contenu,
+    note,
+    date_creation
+  ) VALUES (
+    p_id_jeu,
+    p_id_utilisateur,
+    p_contenu,
+    p_note,
+    NOW()
+  );
+END;
+//
+DELIMITER ;
+
+	

@@ -283,6 +283,53 @@ app.post('/availableGames', (req, res) => {
   );
 });
 
+/*──── ADD COMMENT ────────────────────────────────────────────────────*/
+app.post('/comment', (req, res) => {
+  // 1) Check authentication
+  if (!req.session.userId) {
+    return res.status(401).json({ error: 'User not logged in' });
+  }
+
+  // 2) Extract & validate parameters
+  const { id_jeu, contenu, note } = req.body;
+  if (!id_jeu || !contenu || note == null) {
+    return res.status(400).json({ error: 'Missing id_jeu, contenu or note' });
+  }
+
+  // 3) Call the stored procedure
+  db.query(
+    'CALL AddComment(?, ?, ?, ?)',
+    [req.session.userId, id_jeu, contenu, note],
+    err => {
+      if (err) {
+        console.error('AddComment SQL Error:', err);
+        return res.status(500).json({ error: 'Error adding comment' });
+      }
+      res.json({ message: 'Comment added successfully' });
+    }
+  );
+});
+
+/*──── VIEW COMMENTS (via stored proc) ───────────────────────────────*/
+app.post('/viewcomments', (req, res) => {
+  const { id_jeu } = req.body;
+  if (!id_jeu) {
+    return res.status(400).json({ error: 'Missing parameter: id_jeu' });
+  }
+
+  db.query('CALL ViewCommentsByGame(?)', [id_jeu], (err, resultSets) => {
+    if (err) {
+      console.error('ViewCommentsByGame SQL Error:', err);
+      return res.status(500).json({ error: 'Error fetching comments' });
+    }
+    // For mysql/mysql2, resultSets[0] holds the rows
+    const comments = Array.isArray(resultSets) ? resultSets[0] : resultSets;
+    res.json(comments);
+  });
+});
+
+
+
 /*─────────────────────────────────────────────────────────────────────────
 │  START SERVER
 └────────────────────────────────────────────────────────────────────────*/

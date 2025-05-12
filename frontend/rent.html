@@ -80,6 +80,9 @@
             background: #ccc;
             cursor: default;
         }
+        .controls .secondary-btn {
+            background: #457B9D;
+        }
     </style>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -89,7 +92,6 @@
         <img
                 src="/assets/logo.png"
                 alt="BoardTrust logo"
-                style="cursor: pointer;"
                 class="logo"
         >
     </a>
@@ -120,11 +122,9 @@
             const games = await res.json();
             renderGames(games);
         } catch (err) {
-            // reuse the same container reference
             container.innerText = err.message;
         }
     }
-
 
     // Affiche les cartes de jeux
     function renderGames(games) {
@@ -148,14 +148,14 @@
             const details = document.createElement('div');
             details.className = 'game-details';
             details.innerHTML = `
-          <div><strong>Année :</strong> ${game.annee_publication || 'N/A'}</div>
-          <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
-          <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
-          <div><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
-        `;
+                <div><strong>Année :</strong> ${game.annee_publication || 'N/A'}</div>
+                <div><strong>Note moyenne :</strong> ${game.average ?? 'N/A'}</div>
+                <div><strong>Note bayésienne :</strong> ${game.bayes_average ?? 'N/A'}</div>
+                <div><strong>Utilisateurs :</strong> ${game.nb_users ?? 'N/A'}</div>
+            `;
             card.appendChild(details);
 
-            // Contrôles de location
+            // Contrôles de location et commentaires
             const controls = document.createElement('div');
             controls.className = 'controls';
 
@@ -179,6 +179,20 @@
             rentBtn.innerText = 'Louer';
             rentBtn.onclick = () => rentGame(game.id_jeu, dateInput.value, rentBtn);
             controls.appendChild(rentBtn);
+
+            // Bouton Ajouter un commentaire
+            const commentBtn = document.createElement('button');
+            commentBtn.innerText = 'Ajouter un commentaire';
+            commentBtn.className = 'secondary-btn';
+            commentBtn.onclick = () => addCommentPrompt(game.id_jeu);
+            controls.appendChild(commentBtn);
+
+            // Bouton Voir les commentaires
+            const viewBtn = document.createElement('button');
+            viewBtn.innerText = 'Voir les commentaires';
+            viewBtn.className = 'secondary-btn';
+            viewBtn.onclick = () => location.href = `comments.html?id_jeu=${game.id_jeu}`;
+            controls.appendChild(viewBtn);
 
             card.appendChild(controls);
             container.appendChild(card);
@@ -215,8 +229,38 @@
         }
     }
 
+    // Affiche une boîte de dialogue pour ajouter un commentaire
+    async function addCommentPrompt(id_jeu) {
+        const contenu = prompt('Entrez votre commentaire :');
+        if (contenu === null) return;
+        let note = prompt('Entrez votre note (0.0 à 5.0) :');
+        if (note === null) return;
+        note = parseFloat(note);
+        if (isNaN(note) || note < 0 || note > 5) {
+            alert('Note invalide.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/comment', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_jeu, contenu, note })
+            });
+            const result = await res.json();
+            if (!res.ok) throw new Error(result.error || 'Erreur lors de l\'ajout du commentaire');
+
+            alert('Commentaire ajouté !');
+        } catch (err) {
+            alert('Erreur : ' + err.message);
+            console.error(err);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', fetchGames);
 </script>
+
 <footer class="site-footer">
     <p>© 2025 BoardTrust. Tous droits réservés.</p>
     <p>Fondé par Martrenchar Luc, Doyhenart Xan, Abouleila Selim, Nguema André</p>
