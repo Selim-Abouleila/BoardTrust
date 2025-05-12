@@ -7,6 +7,7 @@ BoardTrust is a full-stack board game rental platform with a Node.js/Express/MyS
 *Features*
 
 * Browse and rent board games with a return date picker.
+* Leave comments and view them
 * Return games you have rented.
 * View your rental history in a sortable table.
 * User authentication with signup, login, and logout using sessions.
