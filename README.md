@@ -101,6 +101,8 @@ Open `frontend/main.html` in your browser or serve it via Express’s static mid
 * `POST /return` — return a game
 * `POST /history` — view rental history
 * `POST /rentedGames` — view current rentals
+* `POST /comment` — add comment
+* `POST /viewcomments` — views comments
 * `POST /logout` — end session
 
 ---
