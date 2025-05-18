@@ -194,6 +194,7 @@ CALL RetournerJeu(3, 13);
 SELECT * FROM Jeu;
 
 USE Boardtrust;
+DROP PROCEDURE IF EXISTS ViewAvailableGamesForUser;
 DELIMITER //
 
 CREATE PROCEDURE ViewAvailableGamesForUser(IN p_id_utilisateur INT)
@@ -204,7 +205,8 @@ BEGIN
     j.annee_publication,
     j.average,
     j.bayes_average,
-    j.nb_users
+    j.nb_users,
+    j.stock
   FROM Jeu AS j
   WHERE NOT EXISTS (
     SELECT 1
@@ -217,6 +219,7 @@ BEGIN
 END;
 //
 DELIMITER ;
+
 
 CALL ViewAvailableGamesForUser(3);
 
@@ -309,4 +312,4 @@ BEGIN
   END IF;
 END //
 DELIMITER ;
-
+CALL ViewAvailableGamesForUser(3);

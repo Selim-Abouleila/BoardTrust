@@ -83,3 +83,59 @@ END;
 DELIMITER ;
 
 	
+CALL AddComment(
+  3,                 -- p_id_utilisateur
+  13,                 -- p_id_jeu
+  'Super fun game!',  -- p_contenu
+  4.5                 -- p_note
+);
+
+SELECT * FROM Commentaire;
+
+
+DELIMITER //
+
+CREATE PROCEDURE ViewCommentsByGame(
+  IN p_id_jeu INT
+)
+BEGIN
+  SELECT
+    c.id_commentaire,
+    c.id_utilisateur,
+    u.pseudo,
+    c.contenu,
+    c.note,
+    c.date_creation
+  FROM Commentaire AS c
+  JOIN Utilisateur AS u
+    ON u.id_utilisateur = c.id_utilisateur
+  WHERE c.id_jeu = p_id_jeu
+  ORDER BY c.date_creation DESC;
+END;
+//
+
+DELIMITER ;
+
+CALL ViewCommentsByGame(13);
+
+SELECT * FROM Jeu;
+
+SELECT * FROM JEU;
+
+UPDATE Jeu
+SET stock = '3'
+WHERE stock IS NULL;
+
+
+-- 1) Make sure the event scheduler is enabled
+SET GLOBAL event_scheduler = ON;
+
+-- 2) Create the yearly event
+DROP EVENT IF EXISTS annual_stock_increment;
+CREATE EVENT annual_stock_increment
+  ON SCHEDULE
+    EVERY 1 YEAR
+    STARTS '2025-01-01 00:00:00'
+  DO
+    UPDATE Jeu
+    SET stock = stock + 1;

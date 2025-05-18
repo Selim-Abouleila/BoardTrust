@@ -39,3 +39,18 @@ SELECT * FROM vue_historique_locations;
 SELECT * FROM vue_top_utilisateurs;
 
 SELECT * FROM Location;
+
+
+DROP VIEW IF EXISTS VueJeuSansDescription;
+CREATE VIEW VueJeuSansDescription AS
+SELECT
+  id_jeu,
+  nom,
+  annee_publication,
+  average,
+  bayes_average,
+  nb_users,
+  stock
+FROM Jeu;
+
+SELECT * FROM VueJeuSansDescription
